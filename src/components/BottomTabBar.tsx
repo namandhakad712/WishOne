@@ -1,0 +1,43 @@
+import React from "react";
+import { Home, MessageSquare, User } from "lucide-react";
+
+interface BottomTabBarProps {
+  activeTab?: "home" | "chat" | "profile";
+  onHomeClick?: () => void;
+  onChatClick?: () => void;
+  onProfileClick?: () => void;
+}
+
+const BottomTabBar = ({
+  activeTab = "home",
+  onHomeClick = () => {},
+  onChatClick = () => {},
+  onProfileClick = () => {},
+}: BottomTabBarProps) => {
+  return (
+    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-[90%] max-w-md bg-[#e8eeeb] rounded-full py-3 px-6 flex justify-between items-center shadow-[4px_4px_10px_rgba(0,0,0,0.1),-4px_-4px_10px_rgba(255,255,255,0.8)]">
+      <button
+        onClick={onHomeClick}
+        className={`p-2 ${activeTab === "home" ? "text-[#0f3c2d]" : "text-gray-400"} hover:text-[#0f3c2d] transition-colors`}
+      >
+        <Home className="w-6 h-6" />
+      </button>
+
+      <button
+        onClick={onChatClick}
+        className={`p-2 ${activeTab === "chat" ? "text-[#0f3c2d]" : "text-gray-400"} hover:text-[#0f3c2d] transition-colors`}
+      >
+        <MessageSquare className="w-6 h-6" />
+      </button>
+
+      <button
+        onClick={onProfileClick}
+        className={`p-2 ${activeTab === "profile" ? "text-[#0f3c2d]" : "text-gray-400"} hover:text-[#0f3c2d] transition-colors`}
+      >
+        <User className="w-6 h-6" />
+      </button>
+    </div>
+  );
+};
+
+export default BottomTabBar;
