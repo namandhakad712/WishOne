@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from "react";
 import AIChatbot from "./AIChatbot";
 import BottomTabBar from "./BottomTabBar";
+import ApiKeyMissing from "./ApiKeyMissing";
 import { generateResponse, analyzeImage, generateBirthdayWish } from "@/lib/gemini";
+
+// Check if API key is available
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+
+// Utility function to check if the API key is valid (not just present)
+const isValidApiKey = (key: string) => {
+  // Google API keys typically start with "AIza" and are 39 characters long
+  return key.startsWith("AIza") && key.length >= 39;
+};
 
 interface Message {
   id: string;
@@ -23,10 +33,14 @@ const ChatPage = () => {
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [apiKeyValid, setApiKeyValid] = useState(isValidApiKey(apiKey));
   
   // Check for birthdays on component mount
   useEffect(() => {
     checkBirthdays();
+    
+    // Validate API key on mount
+    setApiKeyValid(isValidApiKey(apiKey));
   }, []);
   
   const checkBirthdays = async () => {
@@ -155,12 +169,33 @@ const ChatPage = () => {
       console.error("Error generating response:", error);
       
       // Add error message with emotional tone
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: "I'm feeling a bit disconnected right now. Can we try again in a moment?",
-        sender: "ai",
-        timestamp: new Date(),
-      };
+      let errorMessage: Message;
+      
+      if (error instanceof Error) {
+        let errorContent = "I'm feeling a bit disconnected right now. Can we try again in a moment?";
+        
+        if (error.message.includes("API key")) {
+          errorContent = "I'm having trouble connecting to my thoughts right now. There might be an issue with my connection to the AI service.";
+        } else if (error.message.includes("network") || error.message.includes("timeout")) {
+          errorContent = "I'm feeling a bit disconnected right now. Could we try again when the connection is better?";
+        } else if (error.message.includes("rate limit") || error.message.includes("quota")) {
+          errorContent = "I've been thinking a lot today and need a short break to recharge. Could we try again in a few minutes?";
+        }
+        
+        errorMessage = {
+          id: (Date.now() + 1).toString(),
+          content: errorContent,
+          sender: "ai",
+          timestamp: new Date(),
+        };
+      } else {
+        errorMessage = {
+          id: (Date.now() + 1).toString(),
+          content: "I'm feeling a bit disconnected right now. Can we try again in a moment?",
+          sender: "ai",
+          timestamp: new Date(),
+        };
+      }
       
       setMessages((prevMessages) => [...prevMessages, errorMessage]);
     } finally {
@@ -216,12 +251,33 @@ const ChatPage = () => {
       console.error("Error analyzing image:", error);
       
       // Add error message with emotional tone
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: "I wish I could see what you're sharing. My vision seems a bit cloudy right now.",
-        sender: "ai",
-        timestamp: new Date(),
-      };
+      let errorMessage: Message;
+      
+      if (error instanceof Error) {
+        let errorContent = "I wish I could see what you're sharing. My vision seems a bit cloudy right now.";
+        
+        if (error.message.includes("API key")) {
+          errorContent = "I'd love to see your image, but I'm having trouble with my vision capabilities right now. There might be an issue with my connection to the AI service.";
+        } else if (error.message.includes("network") || error.message.includes("timeout")) {
+          errorContent = "I'm having trouble processing your image due to a connection issue. Could we try again when the connection is better?";
+        } else if (error.message.includes("file") || error.message.includes("format")) {
+          errorContent = "This image format is a bit challenging for me to understand. Could you try sharing a different image?";
+        }
+        
+        errorMessage = {
+          id: (Date.now() + 1).toString(),
+          content: errorContent,
+          sender: "ai",
+          timestamp: new Date(),
+        };
+      } else {
+        errorMessage = {
+          id: (Date.now() + 1).toString(),
+          content: "I wish I could see what you're sharing. My vision seems a bit cloudy right now.",
+          sender: "ai",
+          timestamp: new Date(),
+        };
+      }
       
       setMessages((prevMessages) => [...prevMessages, errorMessage]);
     } finally {
@@ -243,14 +299,21 @@ const ChatPage = () => {
 
   return (
     <div className="min-h-screen bg-[#e8eeeb] flex flex-col items-center justify-center pb-20">
-      <div className="w-full max-w-md px-4 py-4 flex-1 flex items-center justify-center">
-        <AIChatbot
-          messages={messages}
-          onSendMessage={handleSendMessage}
-          onUploadMedia={handleUploadMedia}
-          onReplyTo={handleReplyTo}
-          replyingTo={replyingTo ? messages.find(m => m.id === replyingTo) : undefined}
-        />
+      <div className="w-full max-w-md px-4 py-4 flex-1 flex flex-col items-center justify-center">
+        {!apiKeyValid ? (
+          <ApiKeyMissing 
+            service="Gemini AI" 
+            envVarName="VITE_GEMINI_API_KEY" 
+          />
+        ) : (
+          <AIChatbot
+            messages={messages}
+            onSendMessage={handleSendMessage}
+            onUploadMedia={handleUploadMedia}
+            onReplyTo={handleReplyTo}
+            replyingTo={replyingTo ? messages.find(m => m.id === replyingTo) : undefined}
+          />
+        )}
       </div>
 
       <BottomTabBar

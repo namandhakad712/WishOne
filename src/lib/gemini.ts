@@ -9,6 +9,12 @@ export const genAI = new GoogleGenerativeAI(apiKey);
 // Function to generate a response using Gemini
 export async function generateResponse(prompt: string) {
   try {
+    // Check if API key is available
+    if (!apiKey) {
+      console.error("Gemini API key is missing. Please add VITE_GEMINI_API_KEY to your .env.local file.");
+      return "I can't connect to my brain right now. Please check if my API key is configured correctly.";
+    }
+
     // For text-only input, use the gemini-1.5-flash model
     const model = genAI.getGenerativeModel({ 
       model: "gemini-1.5-flash",
@@ -32,6 +38,18 @@ export async function generateResponse(prompt: string) {
     return text;
   } catch (error) {
     console.error("Error generating response:", error);
+    
+    // Provide more specific error messages based on the error type
+    if (error instanceof Error) {
+      if (error.message.includes("API key")) {
+        return "I can't access my thinking capabilities right now. There seems to be an issue with my API key.";
+      } else if (error.message.includes("network") || error.message.includes("timeout")) {
+        return "I'm having trouble connecting to my brain. Could we try again when the connection is better?";
+      } else if (error.message.includes("rate limit") || error.message.includes("quota")) {
+        return "I've been thinking too much today and need a short break. Could we try again in a few minutes?";
+      }
+    }
+    
     return "I'm feeling a bit overwhelmed right now. Can we try again in a moment?";
   }
 }
@@ -39,6 +57,12 @@ export async function generateResponse(prompt: string) {
 // Function to generate a birthday wish
 export async function generateBirthdayWish(name: string, relation: string, tone: string = "warm") {
   try {
+    // Check if API key is available
+    if (!apiKey) {
+      console.error("Gemini API key is missing. Please add VITE_GEMINI_API_KEY to your .env.local file.");
+      return "I'd love to help with a birthday wish, but I can't access my creative writing abilities right now. Please check if my API key is configured correctly.";
+    }
+
     const model = genAI.getGenerativeModel({ 
       model: "gemini-1.5-flash",
       generationConfig: {
@@ -58,6 +82,18 @@ export async function generateBirthdayWish(name: string, relation: string, tone:
     return text;
   } catch (error) {
     console.error("Error generating birthday wish:", error);
+    
+    // Provide more specific error messages based on the error type
+    if (error instanceof Error) {
+      if (error.message.includes("API key")) {
+        return "I can't access my creative writing abilities right now. There seems to be an issue with my API key.";
+      } else if (error.message.includes("network") || error.message.includes("timeout")) {
+        return "I'm having trouble connecting to my inspiration. Could we try again when the connection is better?";
+      } else if (error.message.includes("rate limit") || error.message.includes("quota")) {
+        return "I've written too many wishes today and need a short break. Could we try again in a few minutes?";
+      }
+    }
+    
     return "I wish I could find the perfect words right now. Let's try again when I'm feeling more inspired.";
   }
 }
@@ -65,6 +101,12 @@ export async function generateBirthdayWish(name: string, relation: string, tone:
 // Function to analyze an image using Gemini
 export async function analyzeImage(imageData: string, prompt: string) {
   try {
+    // Check if API key is available
+    if (!apiKey) {
+      console.error("Gemini API key is missing. Please add VITE_GEMINI_API_KEY to your .env.local file.");
+      return "I'd love to see what you're sharing, but I can't access my vision capabilities right now. Please check if my API key is configured correctly.";
+    }
+
     // For multimodal input (text + image), use the gemini-1.5-flash model
     const model = genAI.getGenerativeModel({ 
       model: "gemini-1.5-flash",
@@ -105,6 +147,20 @@ export async function analyzeImage(imageData: string, prompt: string) {
     return text;
   } catch (error) {
     console.error("Error analyzing image:", error);
+    
+    // Provide more specific error messages based on the error type
+    if (error instanceof Error) {
+      if (error.message.includes("API key")) {
+        return "I can't see the image right now. There seems to be an issue with my API key.";
+      } else if (error.message.includes("network") || error.message.includes("timeout")) {
+        return "I'm having trouble processing your image. Could we try again when the connection is better?";
+      } else if (error.message.includes("rate limit") || error.message.includes("quota")) {
+        return "I've analyzed too many images today and need a short break. Could we try again in a few minutes?";
+      } else if (error.message.includes("image") || error.message.includes("format")) {
+        return "I'm having trouble understanding this image format. Could you try sharing a different image?";
+      }
+    }
+    
     return "I wish I could see what you're sharing. Something's not quite right with my vision right now.";
   }
 }

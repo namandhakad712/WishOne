@@ -94,12 +94,6 @@ const AddBirthdayForm = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button className="bg-purple-500 hover:bg-purple-600">
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add Birthday
-        </Button>
-      </DialogTrigger>
       <DialogContent className="sm:max-w-[500px] bg-white rounded-lg">
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold text-purple-700">
