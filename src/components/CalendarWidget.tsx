@@ -125,7 +125,7 @@ const CalendarWidget = ({
     birthday: {
       color: "#6b21a8",
       fontWeight: "bold",
-      position: "relative",
+      position: "relative" as const,
       backgroundColor: "rgba(147, 51, 234, 0.1)",
       borderRadius: "100%",
     },
@@ -190,13 +190,6 @@ const CalendarWidget = ({
             <CardHeader>
               <CardTitle className="text-purple-800 flex justify-between items-center">
                 <span>Upcoming Birthdays</span>
-                <Button
-                  size="sm"
-                  className="bg-purple-600 hover:bg-purple-700 rounded-full h-8 w-8 p-0"
-                  onClick={onAddBirthday}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
               </CardTitle>
             </CardHeader>
             <CardContent className="overflow-auto max-h-[300px]">
@@ -253,13 +246,7 @@ const CalendarWidget = ({
               )}
             </CardContent>
             <CardFooter className="flex justify-center border-t border-purple-100 pt-3">
-              <Button
-                variant="link"
-                className="text-purple-600 hover:text-purple-800"
-                onClick={onAddBirthday}
-              >
-                Add a birthday
-              </Button>
+              {/* Removing the Add Birthday button from footer */}
             </CardFooter>
           </Card>
         </div>

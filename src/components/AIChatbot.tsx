@@ -157,13 +157,13 @@ const AIChatbot = ({
   };
 
   return (
-    <div className="flex flex-col h-[500px] w-[400px] rounded-xl shadow-lg bg-white border border-gray-100 overflow-hidden">
+    <div className="flex flex-col h-[500px] w-full sm:w-[400px] rounded-xl shadow-lg bg-white border border-gray-100 overflow-hidden">
       {/* Header */}
       <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-purple-100 to-green-100 rounded-t-xl">
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
             <AvatarImage
-              src="https://api.dicebear.com/7.x/avataaars/svg?seed=wishone&backgroundColor=b6e3f4"
+              src="https://api.dicebear.com/7.x/thumbs/svg?seed=wishone&backgroundColor=gradient&gradientColors[]=a78bfa,bef264"
               alt="WishOne"
             />
             <AvatarFallback className="bg-gradient-to-r from-purple-200 to-green-200 text-purple-700">
@@ -194,7 +194,7 @@ const AIChatbot = ({
                 {message.sender === "ai" && (
                   <Avatar className="h-8 w-8 border-2 border-green-100 shadow-sm">
                     <AvatarImage
-                      src="https://api.dicebear.com/7.x/avataaars/svg?seed=wishone&backgroundColor=b6e3f4"
+                      src="https://api.dicebear.com/7.x/thumbs/svg?seed=wishone&backgroundColor=gradient&gradientColors[]=a78bfa,bef264"
                       alt="AI"
                     />
                     <AvatarFallback className="bg-green-100 text-green-700">
@@ -245,7 +245,7 @@ const AIChatbot = ({
                 {message.sender === "user" && (
                   <Avatar className="h-8 w-8 border-2 border-purple-100 shadow-sm">
                     <AvatarImage
-                      src="https://api.dicebear.com/7.x/avataaars/svg?seed=user"
+                      src="https://api.dicebear.com/7.x/thumbs/svg?seed=user&backgroundColor=gradient&gradientColors[]=a78bfa,bef264"
                       alt="User"
                     />
                     <AvatarFallback className="bg-purple-100 text-purple-700">
@@ -340,7 +340,7 @@ const AIChatbot = ({
         <div className="flex justify-between mt-2 text-xs text-gray-500">
           <div className="flex items-center gap-2">
             <Heart className="h-4 w-4 text-pink-500" />
-            <span>Emotionally intelligent responses</span>
+            <span>AI can make mistakes, Do consider double-checking.</span>
           </div>
           <TooltipProvider>
             <Tooltip>
