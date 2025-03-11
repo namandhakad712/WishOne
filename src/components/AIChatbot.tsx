@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { ScrollArea } from "./ui/scroll-area";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
@@ -15,6 +15,10 @@ import {
   PlusCircleIcon,
   SmileIcon,
   Loader2,
+  CornerUpLeft,
+  X,
+  Heart,
+  MessageCircle,
 } from "lucide-react";
 import { generateResponse, analyzeImage } from "@/lib/gemini";
 
@@ -23,12 +27,15 @@ interface Message {
   content: string;
   sender: "user" | "ai";
   timestamp: Date;
+  replyTo?: string;
 }
 
 interface AIChatbotProps {
   messages?: Message[];
-  onSendMessage?: (message: string) => void;
+  onSendMessage?: (message: string, replyToId?: string) => void;
   onUploadMedia?: (file: File) => void;
+  onReplyTo?: (messageId: string) => void;
+  replyingTo?: Message;
 }
 
 // Local state to manage messages when parent doesn't provide them
@@ -36,22 +43,9 @@ const defaultMessages: Message[] = [
   {
     id: "1",
     content:
-      "Hello! I'm your WishOne assistant. I can help you remember birthdays and provide emotional support. How can I help you today?",
+      "Hi there! I'm your WishOne companion. I'm here to chat, help with birthdays, or just be a friendly presence. How are you feeling today?",
     sender: "ai",
     timestamp: new Date(Date.now() - 60000),
-  },
-  {
-    id: "2",
-    content: "I need to remember my mom's birthday next month.",
-    sender: "user",
-    timestamp: new Date(Date.now() - 30000),
-  },
-  {
-    id: "3",
-    content:
-      "I'd be happy to help you remember your mom's birthday! Could you tell me the exact date of her birthday so I can add it to your calendar?",
-    sender: "ai",
-    timestamp: new Date(),
   },
 ];
 
@@ -59,6 +53,8 @@ const AIChatbot = ({
   messages = defaultMessages,
   onSendMessage = () => {},
   onUploadMedia = () => {},
+  onReplyTo = () => {},
+  replyingTo,
 }: AIChatbotProps) => {
   const [newMessage, setNewMessage] = useState("");
   const [localMessages, setLocalMessages] = useState<Message[]>(messages);
@@ -69,13 +65,43 @@ const AIChatbot = ({
   // Use props messages if provided, otherwise use local state
   const displayMessages = messages.length > 0 ? messages : localMessages;
 
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [displayMessages]);
+
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      if (scrollAreaRef.current) {
+        const scrollContainer = scrollAreaRef.current.querySelector(
+          "[data-radix-scroll-area-viewport]",
+        );
+        if (scrollContainer) {
+          scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        }
+      }
+    }, 100);
+  };
+
   const handleSendMessage = async () => {
     if (newMessage.trim() || imageData) {
       setIsLoading(true);
 
+      // Add user message to local state if not using parent state
+      if (messages.length === 0) {
+        const userMessage: Message = {
+          id: Date.now().toString(),
+          content: newMessage,
+          sender: "user",
+          timestamp: new Date(),
+          replyTo: replyingTo?.id,
+        };
+        setLocalMessages((prev) => [...prev, userMessage]);
+      }
+
       // Call the parent handler
       if (newMessage.trim()) {
-        onSendMessage(newMessage);
+        onSendMessage(newMessage, replyingTo?.id);
       }
 
       // If we have an image, handle that separately
@@ -93,18 +119,6 @@ const AIChatbot = ({
       // Clear the input
       setNewMessage("");
       setIsLoading(false);
-
-      // Scroll to bottom after new messages
-      setTimeout(() => {
-        if (scrollAreaRef.current) {
-          const scrollContainer = scrollAreaRef.current.querySelector(
-            "[data-radix-scroll-area-viewport]",
-          );
-          if (scrollContainer) {
-            scrollContainer.scrollTop = scrollContainer.scrollHeight;
-          }
-        }
-      }, 100);
     }
   };
 
@@ -131,18 +145,43 @@ const AIChatbot = ({
     }
   };
 
+  // Find the message being replied to
+  const findReplyMessage = (messageId?: string) => {
+    if (!messageId) return null;
+    return displayMessages.find(m => m.id === messageId);
+  };
+
+  // Format timestamp to a friendly format
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
   return (
-    <div className="flex flex-col h-[500px] w-[400px] rounded-xl shadow-lg bg-white border border-gray-100">
+    <div className="flex flex-col h-[500px] w-[400px] rounded-xl shadow-lg bg-white border border-gray-100 overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-green-50 rounded-t-xl">
-        <h2 className="text-lg font-semibold text-purple-700">AI Companion</h2>
-        <p className="text-xs text-gray-500">
-          Your emotional support and birthday reminder assistant
-        </p>
+      <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-purple-100 to-green-100 rounded-t-xl">
+        <div className="flex items-center gap-3">
+          <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
+            <AvatarImage
+              src="https://api.dicebear.com/7.x/avataaars/svg?seed=wishone&backgroundColor=b6e3f4"
+              alt="WishOne"
+            />
+            <AvatarFallback className="bg-gradient-to-r from-purple-200 to-green-200 text-purple-700">
+              WO
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <h2 className="text-lg font-semibold text-purple-700">WishOne Companion</h2>
+            <p className="text-xs text-gray-600 flex items-center gap-1">
+              <Heart className="h-3 w-3 text-pink-500 fill-pink-500" />
+              <span>Your emotional support & birthday reminder</span>
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
+      <ScrollArea className="flex-1 p-4 bg-gradient-to-b from-purple-50/30 to-green-50/30" ref={scrollAreaRef}>
         <div className="space-y-4">
           {displayMessages.map((message) => (
             <div
@@ -150,30 +189,61 @@ const AIChatbot = ({
               className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`flex ${message.sender === "user" ? "flex-row-reverse" : "flex-row"} items-end gap-2 max-w-[80%]`}
+                className={`flex ${message.sender === "user" ? "flex-row-reverse" : "flex-row"} items-end gap-2 max-w-[80%] group`}
               >
                 {message.sender === "ai" && (
-                  <Avatar className="h-8 w-8 border-2 border-green-100">
+                  <Avatar className="h-8 w-8 border-2 border-green-100 shadow-sm">
                     <AvatarImage
-                      src="https://api.dicebear.com/7.x/avataaars/svg?seed=wishone"
+                      src="https://api.dicebear.com/7.x/avataaars/svg?seed=wishone&backgroundColor=b6e3f4"
                       alt="AI"
                     />
                     <AvatarFallback className="bg-green-100 text-green-700">
-                      AI
+                      WO
                     </AvatarFallback>
                   </Avatar>
                 )}
-                <div
-                  className={`rounded-2xl px-4 py-2 text-sm ${
-                    message.sender === "user"
-                      ? "bg-purple-600 text-white rounded-br-none"
-                      : "bg-gray-100 text-gray-800 rounded-bl-none"
-                  }`}
-                >
-                  {message.content}
+                <div className="flex flex-col">
+                  <div 
+                    className={`relative rounded-2xl px-4 py-2 text-sm ${
+                      message.sender === "user"
+                        ? "bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-br-none shadow-sm"
+                        : "bg-white text-gray-800 rounded-bl-none shadow-sm border border-gray-100"
+                    }`}
+                    onDoubleClick={() => onReplyTo(message.id)}
+                  >
+                    {/* Reply indicator */}
+                    {message.replyTo && (
+                      <div className={`text-xs mb-1 pb-1 border-b ${
+                        message.sender === "user" ? "border-purple-400" : "border-gray-300"
+                      }`}>
+                        <span className="flex items-center gap-1">
+                          <CornerUpLeft className="h-3 w-3" />
+                          <span className="truncate max-w-[180px]">
+                            {findReplyMessage(message.replyTo)?.content.substring(0, 20)}
+                            {(findReplyMessage(message.replyTo)?.content.length || 0) > 20 ? "..." : ""}
+                          </span>
+                        </span>
+                      </div>
+                    )}
+                    
+                    {message.content}
+                    
+                    {/* Reply button on hover - fixed positioning */}
+                    <button 
+                      className={`absolute ${
+                        message.sender === "user" ? "right-full mr-2" : "left-full ml-2"
+                      } top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity`}
+                      onClick={() => onReplyTo(message.id)}
+                    >
+                      <CornerUpLeft className="h-4 w-4 text-gray-500 hover:text-gray-700" />
+                    </button>
+                  </div>
+                  <span className="text-xs text-gray-500 mt-1 px-2">
+                    {formatTime(message.timestamp)}
+                  </span>
                 </div>
                 {message.sender === "user" && (
-                  <Avatar className="h-8 w-8 border-2 border-purple-100">
+                  <Avatar className="h-8 w-8 border-2 border-purple-100 shadow-sm">
                     <AvatarImage
                       src="https://api.dicebear.com/7.x/avataaars/svg?seed=user"
                       alt="User"
@@ -189,8 +259,25 @@ const AIChatbot = ({
         </div>
       </ScrollArea>
 
+      {/* Reply indicator */}
+      {replyingTo && (
+        <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-xs text-gray-600">
+            <CornerUpLeft className="h-3 w-3" />
+            <span>Replying to: </span>
+            <span className="font-medium truncate max-w-[200px]">{replyingTo.content}</span>
+          </div>
+          <button 
+            className="text-gray-500 hover:text-gray-700"
+            onClick={() => onReplyTo("")}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {/* Input area */}
-      <div className="p-4 border-t border-gray-100 bg-gray-50 rounded-b-xl">
+      <div className="p-4 border-t border-gray-100 bg-white rounded-b-xl">
         {imageData && (
           <div className="mb-2 relative">
             <img
@@ -211,21 +298,21 @@ const AIChatbot = ({
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type your message..."
-            className="min-h-[60px] max-h-[120px] bg-white rounded-xl resize-none"
+            placeholder="Share your thoughts..."
+            className="min-h-[60px] max-h-[120px] bg-white rounded-xl resize-none border-gray-200 focus:border-purple-300 focus:ring-purple-200"
           />
           <div className="flex flex-col gap-2">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <label htmlFor="file-upload" className="cursor-pointer">
-                    <div className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors">
+                    <div className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
                       <ImageIcon className="h-5 w-5 text-gray-700" />
                     </div>
                   </label>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Upload image</p>
+                  <p>Share an image</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -239,7 +326,7 @@ const AIChatbot = ({
             <Button
               onClick={handleSendMessage}
               size="icon"
-              className="rounded-full bg-purple-600 hover:bg-purple-700"
+              className="rounded-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 shadow-sm"
               disabled={(!newMessage.trim() && !imageData) || isLoading}
             >
               {isLoading ? (
@@ -252,19 +339,19 @@ const AIChatbot = ({
         </div>
         <div className="flex justify-between mt-2 text-xs text-gray-500">
           <div className="flex items-center gap-2">
-            <SmileIcon className="h-4 w-4" />
+            <Heart className="h-4 w-4 text-pink-500" />
             <span>Emotionally intelligent responses</span>
           </div>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-6 px-2">
-                  <PlusCircleIcon className="h-4 w-4 mr-1" />
+                <Button variant="ghost" size="sm" className="h-6 px-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50">
+                  <MessageCircle className="h-4 w-4 mr-1" />
                   <span>Features</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Media analysis, emotional support, and more</p>
+                <p>Emotional support, birthday wishes, and more</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
