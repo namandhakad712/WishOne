@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { ButtonKwity } from "./ui/button-kwity";
 import {
@@ -19,7 +19,95 @@ interface SettingsDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// Define the settings interface
+interface Settings {
+  notifications: {
+    pushNotifications: boolean;
+    emailNotifications: boolean;
+    soundNotifications: boolean;
+  };
+  appearance: {
+    darkMode: boolean;
+    reduceMotion: boolean;
+    highContrast: boolean;
+  };
+  calendar: {
+    googleCalendar: boolean;
+    defaultReminder: string;
+    weekStart: string;
+  };
+  account: {
+    privacyMode: boolean;
+    dataCollection: boolean;
+  };
+}
+
+// Default settings
+const defaultSettings: Settings = {
+  notifications: {
+    pushNotifications: true,
+    emailNotifications: true,
+    soundNotifications: false,
+  },
+  appearance: {
+    darkMode: false,
+    reduceMotion: false,
+    highContrast: false,
+  },
+  calendar: {
+    googleCalendar: false,
+    defaultReminder: "7",
+    weekStart: "monday",
+  },
+  account: {
+    privacyMode: false,
+    dataCollection: true,
+  },
+};
+
 const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
+  // State to track settings
+  const [settings, setSettings] = useState<Settings>(defaultSettings);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  // Load settings from localStorage on component mount
+  useEffect(() => {
+    const savedSettings = localStorage.getItem("wishone_settings");
+    if (savedSettings) {
+      try {
+        setSettings(JSON.parse(savedSettings));
+      } catch (error) {
+        console.error("Error parsing saved settings:", error);
+      }
+    }
+  }, []);
+
+  // Update a specific setting
+  const updateSetting = (
+    category: keyof Settings,
+    setting: string,
+    value: any
+  ) => {
+    setSettings((prev) => ({
+      ...prev,
+      [category]: {
+        ...prev[category],
+        [setting]: value,
+      },
+    }));
+    setHasChanges(true);
+  };
+
+  // Save settings to localStorage
+  const saveSettings = () => {
+    localStorage.setItem("wishone_settings", JSON.stringify(settings));
+    setHasChanges(false);
+    onOpenChange(false);
+    
+    // Show a toast or notification that settings were saved
+    console.log("Settings saved successfully!");
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] bg-white rounded-xl">
@@ -76,7 +164,13 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                     Receive notifications on your device
                   </span>
                 </Label>
-                <Switch id="push-notifications" defaultChecked />
+                <Switch 
+                  id="push-notifications" 
+                  checked={settings.notifications.pushNotifications}
+                  onCheckedChange={(checked) => 
+                    updateSetting("notifications", "pushNotifications", checked)
+                  }
+                />
               </div>
 
               <div className="flex items-center justify-between space-x-2">
@@ -89,7 +183,13 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                     Receive birthday reminders via email
                   </span>
                 </Label>
-                <Switch id="email-notifications" defaultChecked />
+                <Switch 
+                  id="email-notifications" 
+                  checked={settings.notifications.emailNotifications}
+                  onCheckedChange={(checked) => 
+                    updateSetting("notifications", "emailNotifications", checked)
+                  }
+                />
               </div>
 
               <div className="flex items-center justify-between space-x-2">
@@ -102,7 +202,13 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                     Play sounds for notifications
                   </span>
                 </Label>
-                <Switch id="sound-notifications" />
+                <Switch 
+                  id="sound-notifications" 
+                  checked={settings.notifications.soundNotifications}
+                  onCheckedChange={(checked) => 
+                    updateSetting("notifications", "soundNotifications", checked)
+                  }
+                />
               </div>
             </div>
           </TabsContent>
@@ -116,7 +222,13 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                     Use dark theme
                   </span>
                 </Label>
-                <Switch id="dark-mode" />
+                <Switch 
+                  id="dark-mode" 
+                  checked={settings.appearance.darkMode}
+                  onCheckedChange={(checked) => 
+                    updateSetting("appearance", "darkMode", checked)
+                  }
+                />
               </div>
 
               <div className="flex items-center justify-between space-x-2">
@@ -129,7 +241,13 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                     Minimize animations
                   </span>
                 </Label>
-                <Switch id="reduce-motion" />
+                <Switch 
+                  id="reduce-motion" 
+                  checked={settings.appearance.reduceMotion}
+                  onCheckedChange={(checked) => 
+                    updateSetting("appearance", "reduceMotion", checked)
+                  }
+                />
               </div>
 
               <div className="flex items-center justify-between space-x-2">
@@ -142,7 +260,13 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                     Increase contrast for better visibility
                   </span>
                 </Label>
-                <Switch id="high-contrast" />
+                <Switch 
+                  id="high-contrast" 
+                  checked={settings.appearance.highContrast}
+                  onCheckedChange={(checked) => 
+                    updateSetting("appearance", "highContrast", checked)
+                  }
+                />
               </div>
             </div>
           </TabsContent>
@@ -159,7 +283,13 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                     Sync with Google Calendar
                   </span>
                 </Label>
-                <Switch id="google-calendar" />
+                <Switch 
+                  id="google-calendar" 
+                  checked={settings.calendar.googleCalendar}
+                  onCheckedChange={(checked) => 
+                    updateSetting("calendar", "googleCalendar", checked)
+                  }
+                />
               </div>
 
               <div className="flex items-center justify-between space-x-2">
@@ -172,12 +302,14 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                     Set default reminder days before birthdays
                   </span>
                 </Label>
-                <select className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm">
+                <select 
+                  className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+                  value={settings.calendar.defaultReminder}
+                  onChange={(e) => updateSetting("calendar", "defaultReminder", e.target.value)}
+                >
                   <option value="1">1 day before</option>
                   <option value="3">3 days before</option>
-                  <option value="7" selected>
-                    1 week before
-                  </option>
+                  <option value="7">1 week before</option>
                   <option value="14">2 weeks before</option>
                   <option value="30">1 month before</option>
                 </select>
@@ -190,11 +322,13 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                     Set first day of week
                   </span>
                 </Label>
-                <select className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm">
+                <select 
+                  className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+                  value={settings.calendar.weekStart}
+                  onChange={(e) => updateSetting("calendar", "weekStart", e.target.value)}
+                >
                   <option value="sunday">Sunday</option>
-                  <option value="monday" selected>
-                    Monday
-                  </option>
+                  <option value="monday">Monday</option>
                 </select>
               </div>
             </div>
@@ -209,7 +343,13 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                     Hide sensitive information
                   </span>
                 </Label>
-                <Switch id="privacy" />
+                <Switch 
+                  id="privacy" 
+                  checked={settings.account.privacyMode}
+                  onCheckedChange={(checked) => 
+                    updateSetting("account", "privacyMode", checked)
+                  }
+                />
               </div>
 
               <div className="flex items-center justify-between space-x-2">
@@ -222,7 +362,13 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                     Allow anonymous usage data collection
                   </span>
                 </Label>
-                <Switch id="data-collection" defaultChecked />
+                <Switch 
+                  id="data-collection" 
+                  checked={settings.account.dataCollection}
+                  onCheckedChange={(checked) => 
+                    updateSetting("account", "dataCollection", checked)
+                  }
+                />
               </div>
 
               <div className="mt-6">
@@ -245,10 +391,26 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
         </Tabs>
 
         <DialogFooter>
-          <ButtonKwity variant="secondary" onClick={() => onOpenChange(false)}>
+          <ButtonKwity 
+            variant="secondary" 
+            onClick={() => {
+              // Discard changes and close
+              const savedSettings = localStorage.getItem("wishone_settings");
+              if (savedSettings) {
+                setSettings(JSON.parse(savedSettings));
+              } else {
+                setSettings(defaultSettings);
+              }
+              setHasChanges(false);
+              onOpenChange(false);
+            }}
+          >
             Cancel
           </ButtonKwity>
-          <ButtonKwity onClick={() => onOpenChange(false)}>
+          <ButtonKwity 
+            onClick={saveSettings}
+            disabled={!hasChanges}
+          >
             Save Changes
           </ButtonKwity>
         </DialogFooter>

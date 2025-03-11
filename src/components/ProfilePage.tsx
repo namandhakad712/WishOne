@@ -5,7 +5,7 @@ import { ButtonKwity } from "./ui/button-kwity";
 import { Settings, User } from "lucide-react";
 
 const ProfilePage = () => {
-  const [showSettings, setShowSettings] = useState(true);
+  const [showSettings, setShowSettings] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#e8eeeb] flex flex-col items-center justify-center pb-20">
