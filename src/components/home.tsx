@@ -1,16 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "./Header";
 import CalendarWidget from "./CalendarWidget";
 import BirthdayDetails from "./BirthdayDetails";
 import AddBirthdayForm from "./AddBirthdayForm";
 import BottomTabBar from "./BottomTabBar";
 import { ButtonKwity } from "./ui/button-kwity";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Loader2 } from "lucide-react";
+import { addBirthday, getBirthdays, deleteBirthday, updateBirthday } from "@/lib/supabaseClient";
+import { useSupabase } from "@/contexts/SupabaseContext";
+import { useToast } from "@/components/ui/use-toast";
+import { format } from "date-fns";
 
 interface Birthday {
   id: string;
   name: string;
-  date: Date;
+  date: Date | string;
   relation: string;
   hasReminder: boolean;
   reminderDays?: number;
@@ -19,47 +23,64 @@ interface Birthday {
 }
 
 const Home = () => {
-  const [selectedBirthday, setSelectedBirthday] = useState<Birthday | null>(
-    null,
-  );
+  const [selectedBirthday, setSelectedBirthday] = useState<Birthday | null>(null);
   const [showBirthdayDetails, setShowBirthdayDetails] = useState(false);
   const [showAddBirthdayForm, setShowAddBirthdayForm] = useState(false);
+  const [birthdays, setBirthdays] = useState<Birthday[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user, isAuthenticated } = useSupabase();
+  const { toast } = useToast();
 
-  // Sample birthdays data
-  const [birthdays, setBirthdays] = useState<Birthday[]>([
-    {
-      id: "1",
-      name: "Emma Thompson",
-      date: new Date(new Date().getFullYear(), new Date().getMonth(), 15),
-      relation: "Friend",
-      hasReminder: true,
-      reminderDays: 7,
-      googleCalendarLinked: true,
-      notes: "Loves chocolate cake and fantasy novels.",
-    },
-    {
-      id: "2",
-      name: "Michael Chen",
-      date: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 3),
-      relation: "Family",
-      hasReminder: true,
-      reminderDays: 3,
-      googleCalendarLinked: false,
-    },
-    {
-      id: "3",
-      name: "Sophia Rodriguez",
-      date: new Date(
-        new Date().getFullYear(),
-        new Date().getMonth(),
-        new Date().getDate() + 5,
-      ),
-      relation: "Colleague",
-      hasReminder: false,
-      reminderDays: 1,
-      googleCalendarLinked: false,
-    },
-  ]);
+  // Load birthdays from Supabase when component mounts or user changes
+  useEffect(() => {
+    const loadBirthdays = async () => {
+      if (!isAuthenticated) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const birthdaysData = await getBirthdays();
+        
+        console.log("Raw birthdays data from Supabase:", birthdaysData);
+        
+        // Transform the data to match our Birthday interface
+        const formattedBirthdays = birthdaysData.map((bd: any) => {
+          console.log(`Processing birthday: ${bd.name}, date: ${bd.date}, type: ${typeof bd.date}`);
+          
+          const dateObj = new Date(bd.date);
+          console.log(`Converted date object: ${dateObj}, valid: ${!isNaN(dateObj.getTime())}`);
+          
+          return {
+            id: bd.id,
+            name: bd.name,
+            date: dateObj,
+            relation: bd.relation,
+            hasReminder: bd.reminder_days > 0,
+            reminderDays: bd.reminder_days,
+            googleCalendarLinked: bd.google_calendar_linked || false,
+            notes: bd.notes || "",
+          };
+        });
+        
+        console.log("Formatted birthdays:", formattedBirthdays);
+        
+        setBirthdays(formattedBirthdays);
+      } catch (error) {
+        console.error("Error loading birthdays:", error);
+        toast({
+          title: "Error loading birthdays",
+          description: "Could not load your birthdays. Please try again later.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadBirthdays();
+  }, [isAuthenticated, user, toast]);
 
   const handleSelectBirthday = (birthday: Birthday) => {
     setSelectedBirthday(birthday);
@@ -67,27 +88,132 @@ const Home = () => {
   };
 
   const handleAddBirthday = () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to add birthdays.",
+        variant: "destructive",
+      });
+      return;
+    }
     setShowAddBirthdayForm(true);
   };
 
-  const handleBirthdaySubmit = (data: any) => {
-    const newBirthday: Birthday = {
-      id: Date.now().toString(),
-      name: data.name,
-      date: data.date,
-      relation: data.relation,
-      hasReminder: !!data.reminderDays,
-      reminderDays: parseInt(data.reminderDays || "0"),
-      googleCalendarLinked: data.useGoogleCalendar,
-    };
+  const handleBirthdaySubmit = async (data: any) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to add birthdays.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    setBirthdays([...birthdays, newBirthday]);
-    setShowAddBirthdayForm(false);
+    try {
+      setLoading(true);
+      
+      console.log("Form data received:", data);
+      
+      // Format the date as a string (YYYY-MM-DD)
+      let formattedDate;
+      if (data.date instanceof Date) {
+        formattedDate = format(data.date, "yyyy-MM-dd");
+      } else {
+        // If it's already a string, ensure it's in the correct format
+        try {
+          const dateObj = new Date(data.date);
+          formattedDate = format(dateObj, "yyyy-MM-dd");
+        } catch (error) {
+          console.error("Error formatting date:", error);
+          formattedDate = data.date; // Use as is if parsing fails
+        }
+      }
+      
+      console.log("Formatted date:", formattedDate);
+      
+      // Create the birthday object for Supabase
+      const birthdayData = {
+        name: data.name,
+        date: formattedDate,
+        relation: data.relation,
+        reminder_days: parseInt(data.reminderDays || "0"),
+        google_calendar_linked: data.useGoogleCalendar || false,
+        notes: data.notes || "",
+      };
+      
+      console.log("Birthday data to save:", birthdayData);
+      
+      // Save to Supabase
+      const newBirthday = await addBirthday(birthdayData);
+      
+      console.log("Birthday saved, response:", newBirthday);
+      
+      // Transform the returned data to match our Birthday interface
+      const formattedBirthday: Birthday = {
+        id: newBirthday.id,
+        name: newBirthday.name,
+        date: new Date(newBirthday.date),
+        relation: newBirthday.relation,
+        hasReminder: newBirthday.reminder_days > 0,
+        reminderDays: newBirthday.reminder_days,
+        googleCalendarLinked: newBirthday.google_calendar_linked || false,
+        notes: newBirthday.notes || "",
+      };
+      
+      // Update local state
+      setBirthdays([...birthdays, formattedBirthday]);
+      
+      toast({
+        title: "Birthday added",
+        description: `${data.name}'s birthday has been added successfully.`,
+      });
+    } catch (error) {
+      console.error("Error adding birthday:", error);
+      toast({
+        title: "Error adding birthday",
+        description: "Could not add the birthday. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+      setShowAddBirthdayForm(false);
+    }
   };
 
-  const handleDeleteBirthday = (id: string) => {
-    setBirthdays(birthdays.filter((birthday) => birthday.id !== id));
-    setShowBirthdayDetails(false);
+  const handleDeleteBirthday = async (id: string) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to delete birthdays.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // Delete from Supabase
+      await deleteBirthday(id);
+      
+      // Update local state
+      setBirthdays(birthdays.filter((birthday) => birthday.id !== id));
+      
+      toast({
+        title: "Birthday deleted",
+        description: "The birthday has been deleted successfully.",
+      });
+    } catch (error) {
+      console.error("Error deleting birthday:", error);
+      toast({
+        title: "Error deleting birthday",
+        description: "Could not delete the birthday. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+      setShowBirthdayDetails(false);
+    }
   };
 
   const handleEditBirthday = (id: string) => {
@@ -122,13 +248,25 @@ const Home = () => {
           </ButtonKwity>
         </div>
 
-        <div className="flex justify-center">
-          <CalendarWidget
-            birthdays={birthdays}
-            onSelectBirthday={handleSelectBirthday}
-            onAddBirthday={handleAddBirthday}
-          />
-        </div>
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary-emerald" />
+            <span className="ml-2 text-primary-emerald">Loading birthdays...</span>
+          </div>
+        ) : birthdays.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500">No birthdays added yet.</p>
+            <p className="text-gray-500 mt-2">Click "Add Birthday" to get started!</p>
+          </div>
+        ) : (
+          <div className="flex justify-center">
+            <CalendarWidget
+              birthdays={birthdays}
+              onSelectBirthday={handleSelectBirthday}
+              onAddBirthday={handleAddBirthday}
+            />
+          </div>
+        )}
       </main>
 
       {/* Modals */}
@@ -140,7 +278,7 @@ const Home = () => {
             ? {
                 id: selectedBirthday.id,
                 name: selectedBirthday.name,
-                date: selectedBirthday.date,
+                date: selectedBirthday.date instanceof Date ? selectedBirthday.date : new Date(selectedBirthday.date),
                 relation: selectedBirthday.relation,
                 reminderDays: selectedBirthday.reminderDays || 0,
                 googleCalendarLinked:

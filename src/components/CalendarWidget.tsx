@@ -6,6 +6,13 @@ import {
   isSameDay,
   isBefore,
   addDays,
+  parseISO,
+  getMonth,
+  getDate,
+  setMonth,
+  setDate,
+  isAfter,
+  isSameMonth,
 } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -30,7 +37,7 @@ import {
 interface Birthday {
   id: string;
   name: string;
-  date: Date;
+  date: Date | string;
   relation: string;
   hasReminder: boolean;
 }
@@ -40,6 +47,66 @@ interface CalendarWidgetProps {
   onSelectBirthday?: (birthday: Birthday) => void;
   onAddBirthday?: () => void;
 }
+
+// Helper function to ensure we're working with Date objects
+const ensureDate = (date: Date | string): Date => {
+  console.log(`ensureDate called with:`, date, `type: ${typeof date}`);
+  
+  if (date instanceof Date) {
+    if (isNaN(date.getTime())) {
+      console.error("Invalid Date object received:", date);
+      return new Date(); // Return current date as fallback
+    }
+    return date;
+  }
+  
+  try {
+    // Try to parse as ISO string first
+    const parsedDate = parseISO(date);
+    if (!isNaN(parsedDate.getTime())) {
+      console.log(`Successfully parsed as ISO date: ${parsedDate}`);
+      return parsedDate;
+    }
+    
+    // If that fails, try regular Date constructor
+    const dateObj = new Date(date);
+    if (!isNaN(dateObj.getTime())) {
+      console.log(`Successfully created date with constructor: ${dateObj}`);
+      return dateObj;
+    }
+    
+    // If all parsing fails
+    console.error("Failed to parse date:", date);
+    return new Date(); // Return current date as fallback
+  } catch (error) {
+    console.error("Error parsing date:", error, date);
+    return new Date(); // Fallback to current date
+  }
+};
+
+// Helper function to check if a birthday is upcoming in the next N days
+const isUpcomingBirthday = (birthdayDate: Date, daysAhead: number = 30): boolean => {
+  const today = new Date();
+  const endDate = addDays(today, daysAhead);
+  
+  // Create a copy of the birthday date with the current year
+  const thisYearBirthday = new Date(today.getFullYear(), birthdayDate.getMonth(), birthdayDate.getDate());
+  
+  console.log(`Checking if birthday is upcoming: ${format(birthdayDate, "yyyy-MM-dd")}`);
+  console.log(`Original date: ${birthdayDate}, This year's date: ${thisYearBirthday}`);
+  
+  // If the birthday has already passed this year, check for next year
+  if (isBefore(thisYearBirthday, today)) {
+    thisYearBirthday.setFullYear(today.getFullYear() + 1);
+    console.log(`Birthday already passed this year, using next year's date: ${thisYearBirthday}`);
+  }
+  
+  // Check if the birthday falls within our range
+  const isUpcoming = !isBefore(thisYearBirthday, today) && !isAfter(thisYearBirthday, endDate);
+  console.log(`Is upcoming: ${isUpcoming}, Today: ${today}, End date: ${endDate}`);
+  
+  return isUpcoming;
+};
 
 const CalendarWidget = ({
   birthdays = [
@@ -88,7 +155,7 @@ const CalendarWidget = ({
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
     const birthdayOnDate = birthdays.find(
-      (birthday) => date && isSameDay(birthday.date, date),
+      (birthday) => date && isSameDay(ensureDate(birthday.date), date),
     );
     if (birthdayOnDate) {
       onSelectBirthday(birthdayOnDate);
@@ -98,21 +165,35 @@ const CalendarWidget = ({
   // Get upcoming birthdays (next 30 days)
   const upcomingBirthdays = birthdays
     .filter((birthday) => {
-      const today = new Date();
-      const thirtyDaysLater = addDays(today, 30);
-      return (
-        isBefore(birthday.date, thirtyDaysLater) &&
-        !isBefore(birthday.date, today)
-      );
+      const birthdayDate = ensureDate(birthday.date);
+      return isUpcomingBirthday(birthdayDate, 30);
     })
-    .sort((a, b) => a.date.getTime() - b.date.getTime());
+    .sort((a, b) => {
+      const dateA = ensureDate(a.date);
+      const dateB = ensureDate(b.date);
+      
+      // Create this year's versions of the birthdays for comparison
+      const today = new Date();
+      const thisYearA = new Date(today.getFullYear(), dateA.getMonth(), dateA.getDate());
+      const thisYearB = new Date(today.getFullYear(), dateB.getMonth(), dateB.getDate());
+      
+      // If the birthday has already passed this year, use next year's date
+      if (isBefore(thisYearA, today)) thisYearA.setFullYear(today.getFullYear() + 1);
+      if (isBefore(thisYearB, today)) thisYearB.setFullYear(today.getFullYear() + 1);
+      
+      return thisYearA.getTime() - thisYearB.getTime();
+    });
 
   // Function to determine if a date has a birthday
   const hasBirthday = (date: Date | undefined) => {
     if (!date) return false;
     return birthdays.some((birthday) => {
       try {
-        return isSameDay(birthday.date, date);
+        const birthdayDate = ensureDate(birthday.date);
+        return (
+          date.getDate() === birthdayDate.getDate() && 
+          date.getMonth() === birthdayDate.getMonth()
+        );
       } catch (error) {
         console.error("Error comparing dates:", error);
         return false;
@@ -134,6 +215,29 @@ const CalendarWidget = ({
   // Create modifiers for days with birthdays
   const modifiers = {
     birthday: (date: Date) => hasBirthday(date),
+  };
+
+  // Helper function to format the birthday date for display
+  const formatBirthdayDate = (date: Date | string): string => {
+    const birthdayDate = ensureDate(date);
+    const today = new Date();
+    const thisYearBirthday = new Date(today.getFullYear(), birthdayDate.getMonth(), birthdayDate.getDate());
+    
+    // If the birthday has already passed this year, show next year's date
+    if (isBefore(thisYearBirthday, today)) {
+      thisYearBirthday.setFullYear(today.getFullYear() + 1);
+    }
+    
+    // Calculate days until birthday
+    const daysUntil = Math.ceil((thisYearBirthday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysUntil === 0) {
+      return "Today!";
+    } else if (daysUntil === 1) {
+      return "Tomorrow!";
+    } else {
+      return `${format(birthdayDate, "MMMM d")} (in ${daysUntil} days)`;
+    }
   };
 
   return (
@@ -180,8 +284,6 @@ const CalendarWidget = ({
             }}
             modifiers={modifiers}
             modifiersStyles={modifiersStyles}
-            // Removing custom day component to fix the error
-            // Using default day rendering instead
           />
         </div>
 
@@ -207,7 +309,7 @@ const CalendarWidget = ({
                             {birthday.name}
                           </h3>
                           <p className="text-sm text-gray-600">
-                            {format(birthday.date, "MMMM d")}
+                            {formatBirthdayDate(birthday.date)}
                           </p>
                           <Badge
                             variant="secondary"
@@ -246,7 +348,7 @@ const CalendarWidget = ({
               )}
             </CardContent>
             <CardFooter className="flex justify-center border-t border-purple-100 pt-3">
-              {/* Removing the Add Birthday button from footer */}
+              {/* Removed Add Birthday button from footer */}
             </CardFooter>
           </Card>
         </div>

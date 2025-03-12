@@ -12,68 +12,62 @@ export interface Database {
       birthdays: {
         Row: {
           id: string;
+          created_at: string;
           user_id: string;
           name: string;
           date: string;
           relation: string;
           reminder_days: number;
-          google_calendar_linked: boolean;
+          google_calendar_linked: boolean | null;
           notes: string | null;
-          created_at: string;
-          updated_at: string;
         };
         Insert: {
           id?: string;
+          created_at?: string;
           user_id: string;
           name: string;
           date: string;
           relation: string;
           reminder_days: number;
-          google_calendar_linked?: boolean;
+          google_calendar_linked?: boolean | null;
           notes?: string | null;
-          created_at?: string;
-          updated_at?: string;
         };
         Update: {
           id?: string;
+          created_at?: string;
           user_id?: string;
           name?: string;
           date?: string;
           relation?: string;
           reminder_days?: number;
-          google_calendar_linked?: boolean;
+          google_calendar_linked?: boolean | null;
           notes?: string | null;
-          created_at?: string;
-          updated_at?: string;
         };
       };
       users: {
         Row: {
           id: string;
+          created_at: string;
           email: string;
-          phone_number: string | null;
           full_name: string | null;
           avatar_url: string | null;
-          created_at: string;
-          updated_at: string;
+          settings: Json | null;
         };
         Insert: {
-          id?: string;
+          id: string;
+          created_at?: string;
           email: string;
-          phone_number?: string | null;
           full_name?: string | null;
           avatar_url?: string | null;
-          created_at?: string;
-          updated_at?: string;
+          settings?: Json | null;
         };
         Update: {
           id?: string;
+          created_at?: string;
           email?: string;
-          phone_number?: string | null;
           full_name?: string | null;
           avatar_url?: string | null;
-          created_at?: string;
-          updated_at?: string;
+          settings?: Json | null;
         };
       };
     };

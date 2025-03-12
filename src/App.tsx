@@ -4,6 +4,10 @@ import Home from "./components/home";
 import ChatPage from "./components/ChatPage";
 import ProfilePage from "./components/ProfilePage";
 import WelcomeWindow from "./components/WelcomeWindow";
+import LoginPage from "./pages/LoginPage";
+import { ProtectedRoute } from "./components/Auth/ProtectedRoute";
+import { Toaster } from "./components/ui/toaster";
+import { SupabaseStatus } from "./components/SupabaseStatus";
 import routes from "tempo-routes";
 
 function App() {
@@ -32,11 +36,20 @@ function App() {
       <>
         {showWelcome && <WelcomeWindow onClose={handleCloseWelcome} />}
         <Routes>
+          {/* Public routes */}
           <Route path="/" element={<Home />} />
-          <Route path="/chat" element={<ChatPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          
+          {/* Protected routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/chat" element={<ChatPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/dashboard" element={<Home />} />
+          </Route>
         </Routes>
         {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
+        <Toaster />
+        <SupabaseStatus />
       </>
     </Suspense>
   );
