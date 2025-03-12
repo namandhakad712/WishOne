@@ -61,15 +61,28 @@ const ensureDate = (date: Date | string): Date => {
   }
   
   try {
-    // Try to parse as ISO string first
-    const parsedDate = parseISO(date);
+    // Handle YYYY-MM-DD format (which is how dates are stored in the database)
+    if (typeof date === 'string' && date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      console.log(`Parsing date in YYYY-MM-DD format: ${date}`);
+      const [year, month, day] = date.split('-').map(Number);
+      // Note: month is 0-indexed in JavaScript Date
+      const parsedDate = new Date(year, month - 1, day);
+      
+      if (!isNaN(parsedDate.getTime())) {
+        console.log(`Successfully parsed YYYY-MM-DD date: ${parsedDate}`);
+        return parsedDate;
+      }
+    }
+    
+    // Try to parse as ISO string
+    const parsedDate = parseISO(String(date));
     if (!isNaN(parsedDate.getTime())) {
       console.log(`Successfully parsed as ISO date: ${parsedDate}`);
       return parsedDate;
     }
     
     // If that fails, try regular Date constructor
-    const dateObj = new Date(date);
+    const dateObj = new Date(String(date));
     if (!isNaN(dateObj.getTime())) {
       console.log(`Successfully created date with constructor: ${dateObj}`);
       return dateObj;

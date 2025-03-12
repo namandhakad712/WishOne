@@ -8,6 +8,7 @@ import LoginPage from "./pages/LoginPage";
 import { ProtectedRoute } from "./components/Auth/ProtectedRoute";
 import { Toaster } from "./components/ui/toaster";
 import { SupabaseStatus } from "./components/SupabaseStatus";
+import UserSynchronizer from "./components/UserSynchronizer";
 import routes from "tempo-routes";
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
     <Suspense fallback={<p>Loading...</p>}>
       <>
         {showWelcome && <WelcomeWindow onClose={handleCloseWelcome} />}
+        <UserSynchronizer />
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<Home />} />
