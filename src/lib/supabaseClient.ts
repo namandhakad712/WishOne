@@ -209,35 +209,72 @@ export const updateProfile = async (profile: { full_name?: string; avatar_url?: 
   return data.user;
 };
 
+// Utility function to retry API calls
+const retryOperation = async (operation: () => Promise<any>, maxRetries = 3, delay = 1000) => {
+  let lastError;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`Attempt ${attempt}/${maxRetries}...`);
+      return await operation();
+    } catch (error) {
+      console.warn(`Attempt ${attempt} failed:`, error);
+      lastError = error;
+      
+      // Check if it's a connection error
+      const isConnectionError = 
+        error instanceof Error && 
+        (error.message.includes('Failed to fetch') || 
+         error.message.includes('NetworkError') ||
+         error.message.includes('network') ||
+         error.message.includes('connection'));
+      
+      if (!isConnectionError) {
+        // If it's not a connection error, don't retry
+        throw error;
+      }
+      
+      if (attempt < maxRetries) {
+        console.log(`Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        // Exponential backoff
+        delay *= 2;
+      }
+    }
+  }
+  throw lastError;
+};
+
 // Database operations
 export const getBirthdays = async () => {
   const { data: { session } } = await supabase.auth.getSession();
   
   if (!session?.user) {
     console.log("No user logged in");
-    throw new Error("No user logged in");
+    return [];
   }
   
   console.log(`Fetching birthdays for user: ${session.user.id}`);
   
-  try {
-    const { data, error } = await supabase
-      .from("birthdays")
-      .select("*")
-      .eq("user_id", session.user.id)
-      .order("date");
-    
-    if (error) {
-      console.error("Error fetching birthdays:", error);
+  return retryOperation(async () => {
+    try {
+      const { data, error } = await supabase
+        .from("birthdays")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .order("date");
+      
+      if (error) {
+        console.error("Error fetching birthdays:", error);
+        throw error;
+      }
+      
+      console.log(`Found ${data?.length || 0} birthdays`);
+      return data || [];
+    } catch (error) {
+      console.error("Error in getBirthdays:", error);
       throw error;
     }
-    
-    console.log(`Found ${data?.length || 0} birthdays`);
-    return data || [];
-  } catch (error) {
-    console.error("Error in getBirthdays:", error);
-    throw error;
-  }
+  });
 };
 
 // Define types for our RPC functions
@@ -283,117 +320,119 @@ export const addBirthday = async (birthday: {
     throw new Error("No user logged in");
   }
   
-  try {
-    console.log("Adding birthday:", birthday);
-    console.log("User ID:", session.user.id);
-    
-    // Debug: Check if auth.uid() is working correctly
+  return retryOperation(async () => {
     try {
-      // Use any to bypass TypeScript errors
-      const { data: authDebug, error: debugError } = await (supabase.rpc as any)('debug_auth_uid');
+      console.log("Adding birthday:", birthday);
+      console.log("User ID:", session.user.id);
       
-      if (debugError) {
-        console.error("Debug auth error:", debugError);
-      } else {
-        console.log("Auth debug info:", authDebug);
-      }
-    } catch (debugErr) {
-      console.error("Error running auth debug:", debugErr);
-    }
-    
-    // Ensure the date is in the correct format (YYYY-MM-DD)
-    let formattedDate = birthday.date;
-    if (formattedDate && !formattedDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      console.warn("Date format is not YYYY-MM-DD, attempting to format:", formattedDate);
+      // Debug: Check if auth.uid() is working correctly
       try {
-        const dateObj = new Date(formattedDate);
-        formattedDate = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
-        console.log("Reformatted date:", formattedDate);
-      } catch (error) {
-        console.error("Error formatting date:", error);
-        throw new Error("Invalid date format");
-      }
-    }
-    
-    const birthdayData = {
-      ...birthday,
-      date: formattedDate,
-      user_id: session.user.id
-    };
-    
-    console.log("Saving birthday data:", birthdayData);
-    
-    // First try with upsert instead of insert
-    const { data, error } = await supabase
-      .from("birthdays")
-      .upsert(birthdayData)
-      .select()
-      .single();
-    
-    if (error) {
-      console.error("Error adding birthday:", error);
-      console.error("Error code:", error.code);
-      console.error("Error message:", error.message);
-      console.error("Error details:", error.details);
-      
-      // If upsert fails, try a direct insert as a fallback
-      if (error.code === '42501' || error.message.includes('policy')) {
-        console.log("Trying direct insert as fallback...");
-        const { data: insertData, error: insertError } = await supabase
-          .from("birthdays")
-          .insert(birthdayData)
-          .select()
-          .single();
-          
-        if (insertError) {
-          console.error("Fallback insert also failed:", insertError);
-          throw insertError;
-        }
+        // Use any to bypass TypeScript errors
+        const { data: authDebug, error: debugError } = await (supabase.rpc as any)('debug_auth_uid');
         
-        console.log("Birthday added successfully via fallback:", insertData);
-        return insertData;
+        if (debugError) {
+          console.error("Debug auth error:", debugError);
+        } else {
+          console.log("Auth debug info:", authDebug);
+        }
+      } catch (debugErr) {
+        console.error("Error running auth debug:", debugErr);
       }
       
-      throw error;
-    }
-    
-    console.log("Birthday added successfully:", data);
-    return data;
-  } catch (error) {
-    console.error("Error in addBirthday:", error);
-    
-    // Try one more approach if all else fails - direct SQL
-    try {
-      console.log("Attempting final fallback with direct SQL...");
-      const { data: { session } } = await supabase.auth.getSession();
+      // Ensure the date is in the correct format (YYYY-MM-DD)
+      let formattedDate = birthday.date;
+      if (formattedDate && !formattedDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        console.warn("Date format is not YYYY-MM-DD, attempting to format:", formattedDate);
+        try {
+          const dateObj = new Date(formattedDate);
+          formattedDate = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+          console.log("Reformatted date:", formattedDate);
+        } catch (error) {
+          console.error("Error formatting date:", error);
+          throw new Error("Invalid date format");
+        }
+      }
       
-      if (!session?.user) throw new Error("No user logged in");
-      
-      const params = { 
-        p_name: birthday.name,
-        p_date: birthday.date,
-        p_relation: birthday.relation,
-        p_reminder_days: birthday.reminder_days,
-        p_notes: birthday.notes || null,
-        p_google_calendar_linked: birthday.google_calendar_linked || false,
-        p_user_id: session.user.id
+      const birthdayData = {
+        ...birthday,
+        date: formattedDate,
+        user_id: session.user.id
       };
       
-      // Use any to bypass TypeScript errors
-      const { data: sqlData, error: sqlError } = await (supabase.rpc as any)('insert_birthday', params);
+      console.log("Saving birthday data:", birthdayData);
       
-      if (sqlError) {
-        console.error("SQL fallback also failed:", sqlError);
-        throw sqlError;
+      // First try with upsert instead of insert
+      const { data, error } = await supabase
+        .from("birthdays")
+        .upsert(birthdayData)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error("Error adding birthday:", error);
+        console.error("Error code:", error.code);
+        console.error("Error message:", error.message);
+        console.error("Error details:", error.details);
+        
+        // If upsert fails, try a direct insert as a fallback
+        if (error.code === '42501' || error.message.includes('policy')) {
+          console.log("Trying direct insert as fallback...");
+          const { data: insertData, error: insertError } = await supabase
+            .from("birthdays")
+            .insert(birthdayData)
+            .select()
+            .single();
+            
+          if (insertError) {
+            console.error("Fallback insert also failed:", insertError);
+            throw insertError;
+          }
+          
+          console.log("Birthday added successfully via fallback:", insertData);
+          return insertData;
+        }
+        
+        throw error;
       }
       
-      console.log("Birthday added successfully via SQL fallback:", sqlData);
-      return sqlData;
-    } catch (finalError) {
-      console.error("All fallback attempts failed:", finalError);
-      throw error; // Throw the original error
+      console.log("Birthday added successfully:", data);
+      return data;
+    } catch (error) {
+      console.error("Error in addBirthday:", error);
+      
+      // Try one more approach if all else fails - direct SQL
+      try {
+        console.log("Attempting final fallback with direct SQL...");
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session?.user) throw new Error("No user logged in");
+        
+        const params = { 
+          p_name: birthday.name,
+          p_date: birthday.date,
+          p_relation: birthday.relation,
+          p_reminder_days: birthday.reminder_days,
+          p_user_id: session.user.id,
+          p_notes: birthday.notes || null,
+          p_google_calendar_linked: birthday.google_calendar_linked || false
+        };
+        
+        // Use any to bypass TypeScript errors
+        const { data: sqlData, error: sqlError } = await (supabase.rpc as any)('insert_birthday', params);
+        
+        if (sqlError) {
+          console.error("SQL fallback also failed:", sqlError);
+          throw sqlError;
+        }
+        
+        console.log("Birthday added successfully via SQL fallback:", sqlData);
+        return sqlData;
+      } catch (finalError) {
+        console.error("All fallback attempts failed:", finalError);
+        throw error; // Throw the original error
+      }
     }
-  }
+  });
 };
 
 export const updateBirthday = async (
@@ -817,56 +856,58 @@ export const checkConnection = async () => {
 
 // Check if a user exists in both auth and public tables
 export const checkUserExistence = async (userId: string) => {
-  try {
-    console.log("Checking user existence in both tables for ID:", userId);
-    
-    // Use the RPC function to check both tables
-    const { data, error } = await (supabase.rpc as any)(
-      'user_exists_in_both_tables',
-      { user_id: userId }
-    );
-    
-    if (error) {
-      console.error("Error checking user existence:", error);
+  return retryOperation(async () => {
+    try {
+      console.log("Checking user existence in both tables for ID:", userId);
+      
+      // Use the RPC function to check both tables
+      const { data, error } = await (supabase.rpc as any)(
+        'user_exists_in_both_tables',
+        { user_id: userId }
+      );
+      
+      if (error) {
+        console.error("Error checking user existence:", error);
+        return { exists_in_auth: false, exists_in_public: false, error };
+      }
+      
+      console.log("User existence check result:", data);
+      
+      // If user exists in auth but not in public, create the public record
+      if (data && data.exists_in_auth && !data.exists_in_public) {
+        console.log("User exists in auth but not in public, creating public record");
+        
+        // Get user details from auth
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !userData.user) {
+          console.error("Error getting user details:", userError);
+          return { ...data, error: userError };
+        }
+        
+        // Create the public user record
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert({
+            id: userData.user.id,
+            email: userData.user.email || '',
+          });
+          
+        if (insertError) {
+          console.error("Error creating public user record:", insertError);
+          return { ...data, error: insertError };
+        }
+        
+        console.log("Public user record created successfully");
+        return { exists_in_auth: true, exists_in_public: true };
+      }
+      
+      return data;
+    } catch (error) {
+      console.error("Unexpected error checking user existence:", error);
       return { exists_in_auth: false, exists_in_public: false, error };
     }
-    
-    console.log("User existence check result:", data);
-    
-    // If user exists in auth but not in public, create the public record
-    if (data && data.exists_in_auth && !data.exists_in_public) {
-      console.log("User exists in auth but not in public, creating public record");
-      
-      // Get user details from auth
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      
-      if (userError || !userData.user) {
-        console.error("Error getting user details:", userError);
-        return { ...data, error: userError };
-      }
-      
-      // Create the public user record
-      const { error: insertError } = await supabase
-        .from('users')
-        .insert({
-          id: userData.user.id,
-          email: userData.user.email || '',
-        });
-        
-      if (insertError) {
-        console.error("Error creating public user record:", insertError);
-        return { ...data, error: insertError };
-      }
-      
-      console.log("Public user record created successfully");
-      return { exists_in_auth: true, exists_in_public: true };
-    }
-    
-    return data;
-  } catch (error) {
-    console.error("Unexpected error checking user existence:", error);
-    return { exists_in_auth: false, exists_in_public: false, error };
-  }
+  });
 };
 
 // Delete a user completely from both auth and public tables
@@ -928,4 +969,36 @@ export const ensureUserSynchronized = async () => {
     console.error("Error in ensureUserSynchronized:", error);
     return null;
   }
+};
+
+// Health check function to verify Supabase connection
+export const checkSupabaseHealth = async () => {
+  return retryOperation(async () => {
+    try {
+      // Try to get the server timestamp as a simple health check
+      const { data, error } = await (supabase.rpc as any)('debug_auth_uid');
+      
+      if (error) {
+        console.error("Supabase health check failed:", error);
+        return { 
+          healthy: false, 
+          error: error.message,
+          timestamp: new Date().toISOString()
+        };
+      }
+      
+      return { 
+        healthy: true, 
+        data,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error("Error in health check:", error);
+      return { 
+        healthy: false, 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      };
+    }
+  }, 2); // Only retry once for health checks
 }; 

@@ -9,6 +9,7 @@ import { ProtectedRoute } from "./components/Auth/ProtectedRoute";
 import { Toaster } from "./components/ui/toaster";
 import { SupabaseStatus } from "./components/SupabaseStatus";
 import UserSynchronizer from "./components/UserSynchronizer";
+import ConnectionStatus from "./components/ConnectionStatus";
 import routes from "tempo-routes";
 
 function App() {
@@ -37,6 +38,7 @@ function App() {
       <>
         {showWelcome && <WelcomeWindow onClose={handleCloseWelcome} />}
         <UserSynchronizer />
+        <ConnectionStatus />
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<Home />} />
