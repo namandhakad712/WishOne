@@ -6,7 +6,7 @@ const AIGreeting: React.FC = () => {
 
   useEffect(() => {
     // Get user's name from localStorage or use a default
-    const userName = localStorage.getItem('user_name') || 'there';
+    const userName = localStorage.getItem('user_name') || 'Peter';
     setName(userName);
 
     // Generate a random greeting

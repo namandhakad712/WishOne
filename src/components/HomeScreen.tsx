@@ -6,23 +6,23 @@ import HomeHeader from './HomeHeader';
 
 const HomeScreen: React.FC = () => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col relative overflow-hidden">
       {/* Background */}
       <LiquidGradientBackground />
       
       {/* Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col h-full">
         {/* Header */}
         <HomeHeader />
         
         {/* Main Content */}
-        <div className="flex-1 flex items-center justify-center px-6">
+        <div className="flex-1 flex items-center justify-center px-6 pb-24">
           <AIGreeting />
         </div>
-        
-        {/* Menu */}
-        <ExpandableMenu />
       </div>
+      
+      {/* Menu - positioned absolutely */}
+      <ExpandableMenu />
     </div>
   );
 };
