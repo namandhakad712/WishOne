@@ -1,6 +1,6 @@
 import { Suspense, useState, useEffect } from "react";
 import { useRoutes, Routes, Route } from "react-router-dom";
-import Home from "./components/home";
+import HomeScreen from "./components/HomeScreen";
 import ChatPage from "./components/ChatPage";
 import ProfilePage from "./components/ProfilePage";
 import WelcomeWindow from "./components/WelcomeWindow";
@@ -38,22 +38,22 @@ function App() {
       <>
         {showWelcome && <WelcomeWindow onClose={handleCloseWelcome} />}
         <UserSynchronizer />
-        <ConnectionStatus />
         <Routes>
           {/* Public routes */}
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<HomeScreen />} />
           <Route path="/login" element={<LoginPage />} />
           
           {/* Protected routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/dashboard" element={<Home />} />
+            <Route path="/dashboard" element={<HomeScreen />} />
           </Route>
         </Routes>
         {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
         <Toaster />
-        <SupabaseStatus />
+        {/* Only show connection status in development */}
+        {import.meta.env.DEV && <ConnectionStatus />}
       </>
     </Suspense>
   );
