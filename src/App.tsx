@@ -5,12 +5,16 @@ import ChatPage from "./components/ChatPage";
 import ProfilePage from "./components/ProfilePage";
 import WelcomeWindow from "./components/WelcomeWindow";
 import LoginPage from "./pages/LoginPage";
+import HelpPage from "./pages/HelpPage";
+import CalendarPage from "./pages/CalendarPage";
 import { ProtectedRoute } from "./components/Auth/ProtectedRoute";
 import { Toaster } from "./components/ui/toaster";
 import { SupabaseStatus } from "./components/SupabaseStatus";
 import UserSynchronizer from "./components/UserSynchronizer";
 import ConnectionStatus from "./components/ConnectionStatus";
 import routes from "tempo-routes";
+import { AuthCallback } from "./components/Auth/AuthCallback";
+import { CalendarCallback } from "./components/Calendar/CalendarCallback";
 
 function App() {
   const [showWelcome, setShowWelcome] = useState(false);
@@ -42,12 +46,16 @@ function App() {
           {/* Public routes */}
           <Route path="/" element={<HomeScreen />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/help" element={<HelpPage />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           
           {/* Protected routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/dashboard" element={<HomeScreen />} />
+            <Route path="/calendar" element={<CalendarPage />} />
+            <Route path="/calendar/callback" element={<CalendarCallback />} />
           </Route>
         </Routes>
         {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}

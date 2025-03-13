@@ -59,30 +59,56 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-interface AddBirthdayFormProps {
+interface EditBirthdayFormProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   onSubmit?: (data: FormValues) => void;
+  birthdayData?: {
+    id: string;
+    name: string;
+    date: Date;
+    relation: string;
+    reminderDays: number;
+    googleCalendarLinked: boolean;
+    notes?: string;
+  };
 }
 
-const AddBirthdayForm: React.FC<AddBirthdayFormProps> = ({
+const EditBirthdayForm: React.FC<EditBirthdayFormProps> = ({
   open = true,
   onOpenChange,
   onSubmit,
+  birthdayData,
 }) => {
-  const [addToGoogleCalendar, setAddToGoogleCalendar] = useState(false);
+  const [addToGoogleCalendar, setAddToGoogleCalendar] = useState(birthdayData?.googleCalendarLinked || false);
 
   // Initialize form with React Hook Form
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      relation: "",
-      reminderDays: "7",
-      useGoogleCalendar: false,
-      notes: "",
+      name: birthdayData?.name || "",
+      date: birthdayData?.date || new Date(),
+      relation: birthdayData?.relation || "",
+      reminderDays: birthdayData?.reminderDays?.toString() || "7",
+      useGoogleCalendar: birthdayData?.googleCalendarLinked || false,
+      notes: birthdayData?.notes || "",
     },
   });
+
+  // Update form values when birthdayData changes
+  useEffect(() => {
+    if (birthdayData) {
+      form.reset({
+        name: birthdayData.name,
+        date: birthdayData.date,
+        relation: birthdayData.relation,
+        reminderDays: birthdayData.reminderDays.toString(),
+        useGoogleCalendar: birthdayData.googleCalendarLinked,
+        notes: birthdayData.notes || "",
+      });
+      setAddToGoogleCalendar(birthdayData.googleCalendarLinked);
+    }
+  }, [birthdayData, form]);
 
   // Update the useGoogleCalendar field when the switch changes
   useEffect(() => {
@@ -101,10 +127,10 @@ const AddBirthdayForm: React.FC<AddBirthdayFormProps> = ({
       <DialogContent className="sm:max-w-[500px] bg-white rounded-lg">
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold text-purple-700">
-            Add New Birthday
+            Edit Birthday
           </DialogTitle>
           <DialogDescription className="text-gray-500">
-            Fill in the details to add a new birthday reminder.
+            Update the birthday details below.
           </DialogDescription>
         </DialogHeader>
 
@@ -184,6 +210,7 @@ const AddBirthdayForm: React.FC<AddBirthdayFormProps> = ({
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
+                      value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger className="pl-10">
@@ -232,6 +259,7 @@ const AddBirthdayForm: React.FC<AddBirthdayFormProps> = ({
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
+                      value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger className="pl-10">
@@ -285,7 +313,7 @@ const AddBirthdayForm: React.FC<AddBirthdayFormProps> = ({
                 type="submit"
                 className="bg-purple-500 hover:bg-purple-600"
               >
-                Save Birthday
+                Update Birthday
               </Button>
             </DialogFooter>
           </form>
@@ -295,4 +323,4 @@ const AddBirthdayForm: React.FC<AddBirthdayFormProps> = ({
   );
 };
 
-export default AddBirthdayForm;
+export default EditBirthdayForm; 

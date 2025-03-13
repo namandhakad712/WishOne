@@ -12,15 +12,139 @@ import {
 import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { Bell, Calendar, Moon, User, Shield, Loader2 } from "lucide-react";
+import { Bell, Calendar, Moon, User, Shield, Loader2, Palette } from "lucide-react";
 import { saveUserSettings, getUserSettings } from "@/lib/supabaseClient";
 import { useSupabase } from "@/contexts/SupabaseContext";
 import { useToast } from "@/components/ui/use-toast";
+import gradientData from "@/lib/gradients.json";
 
 interface SettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+// Define gradient options
+export interface GradientOption {
+  id: string;
+  name: string;
+  colors: [string, string]; // [startColor, endColor]
+  preview: string; // CSS gradient for preview
+}
+
+// Predefined gradient options
+export const gradientOptions: GradientOption[] = [
+  {
+    id: "mint-gold",
+    name: "Mint & Gold",
+    colors: ["173, 216, 200", "240, 219, 165"],
+    preview: "linear-gradient(135deg, rgb(173, 216, 200) 0%, rgb(240, 219, 165) 100%)"
+  },
+  {
+    id: "lavender-blue",
+    name: "Lavender & Blue",
+    colors: ["187, 143, 206", "126, 171, 223"],
+    preview: "linear-gradient(135deg, rgb(187, 143, 206) 0%, rgb(126, 171, 223) 100%)"
+  },
+  {
+    id: "peach-pink",
+    name: "Peach & Pink",
+    colors: ["255, 184, 140", "255, 140, 184"],
+    preview: "linear-gradient(135deg, rgb(255, 184, 140) 0%, rgb(255, 140, 184) 100%)"
+  },
+  {
+    id: "teal-lime",
+    name: "Teal & Lime",
+    colors: ["100, 204, 197", "188, 226, 158"],
+    preview: "linear-gradient(135deg, rgb(100, 204, 197) 0%, rgb(188, 226, 158) 100%)"
+  },
+  {
+    id: "blue-purple",
+    name: "Blue & Purple",
+    colors: ["116, 166, 236", "181, 134, 218"],
+    preview: "linear-gradient(135deg, rgb(116, 166, 236) 0%, rgb(181, 134, 218) 100%)"
+  },
+  {
+    id: "sunset",
+    name: "Sunset",
+    colors: ["255, 153, 102", "255, 94, 98"],
+    preview: "linear-gradient(135deg, rgb(255, 153, 102) 0%, rgb(255, 94, 98) 100%)"
+  },
+  {
+    id: "ocean-depths",
+    name: "Ocean Depths",
+    colors: ["0, 119, 182", "0, 180, 216"],
+    preview: "linear-gradient(135deg, rgb(0, 119, 182) 0%, rgb(0, 180, 216) 100%)"
+  },
+  {
+    id: "forest-moss",
+    name: "Forest Moss",
+    colors: ["76, 149, 80", "161, 196, 106"],
+    preview: "linear-gradient(135deg, rgb(76, 149, 80) 0%, rgb(161, 196, 106) 100%)"
+  },
+  {
+    id: "random",
+    name: "Random",
+    colors: ["128, 128, 128", "128, 128, 128"], // Placeholder, will be generated dynamically
+    preview: "linear-gradient(135deg, rgb(128, 128, 128) 0%, rgb(128, 128, 128) 100%)"
+  }
+];
+
+// Helper function to generate random RGB color
+export const generateRandomColor = (): string => {
+  const r = Math.floor(Math.random() * 256);
+  const g = Math.floor(Math.random() * 256);
+  const b = Math.floor(Math.random() * 256);
+  return `${r}, ${g}, ${b}`;
+};
+
+// Helper function to convert hex to RGB
+const hexToRgb = (hex: string): string => {
+  // Remove # if present
+  hex = hex.replace('#', '');
+  
+  // Parse the hex values
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  
+  return `${r}, ${g}, ${b}`;
+};
+
+// Generate a random gradient from the JSON file
+export const generateRandomGradient = (): [string, string] => {
+  const gradients = gradientData.gradients;
+  const randomIndex = Math.floor(Math.random() * gradients.length);
+  const selectedGradient = gradients[randomIndex];
+  
+  // Make sure we have at least 2 colors
+  if (selectedGradient.colors.length >= 2) {
+    return [
+      hexToRgb(selectedGradient.colors[0]), 
+      hexToRgb(selectedGradient.colors[1])
+    ];
+  }
+  
+  // Fallback to a default gradient if something goes wrong
+  return ["173, 216, 200", "240, 219, 165"];
+};
+
+// Legacy function for truly random colors (not used by default anymore)
+export const generateTrulyRandomGradient = (): [string, string] => {
+  return [generateRandomColor(), generateRandomColor()];
+};
+
+// Utility function to determine if text should be white based on background color brightness
+export const shouldUseWhiteText = (rgbColor: string): boolean => {
+  // Parse RGB values
+  const [r, g, b] = rgbColor.split(',').map(c => parseInt(c.trim(), 10));
+  
+  // Calculate relative luminance using the formula for perceived brightness
+  // https://www.w3.org/TR/WCAG20-TECHS/G18.html
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  
+  // Return true (use white text) if the background is dark (luminance < 0.5)
+  return luminance < 0.5;
+};
 
 // Define the settings interface
 interface Settings {
@@ -33,6 +157,7 @@ interface Settings {
     darkMode: boolean;
     reduceMotion: boolean;
     highContrast: boolean;
+    backgroundGradient: string; // ID of the selected gradient
   };
   calendar: {
     googleCalendar: boolean;
@@ -56,6 +181,7 @@ const defaultSettings: Settings = {
     darkMode: false,
     reduceMotion: false,
     highContrast: false,
+    backgroundGradient: "mint-gold", // Default gradient
   },
   calendar: {
     googleCalendar: false,
@@ -173,32 +299,20 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
           <>
             <Tabs defaultValue="notifications" className="mt-4">
               <TabsList className="grid grid-cols-4 mb-6">
-                <TabsTrigger
-                  value="notifications"
-                  className="flex flex-col items-center gap-1 py-2"
-                >
-                  <Bell className="h-4 w-4" />
+                <TabsTrigger value="notifications" className="flex flex-col items-center py-2">
+                  <Bell className="h-5 w-5 mb-1" />
                   <span className="text-xs">Notifications</span>
                 </TabsTrigger>
-                <TabsTrigger
-                  value="appearance"
-                  className="flex flex-col items-center gap-1 py-2"
-                >
-                  <Moon className="h-4 w-4" />
+                <TabsTrigger value="appearance" className="flex flex-col items-center py-2">
+                  <Moon className="h-5 w-5 mb-1" />
                   <span className="text-xs">Appearance</span>
                 </TabsTrigger>
-                <TabsTrigger
-                  value="calendar"
-                  className="flex flex-col items-center gap-1 py-2"
-                >
-                  <Calendar className="h-4 w-4" />
+                <TabsTrigger value="calendar" className="flex flex-col items-center py-2">
+                  <Calendar className="h-5 w-5 mb-1" />
                   <span className="text-xs">Calendar</span>
                 </TabsTrigger>
-                <TabsTrigger
-                  value="account"
-                  className="flex flex-col items-center gap-1 py-2"
-                >
-                  <User className="h-4 w-4" />
+                <TabsTrigger value="account" className="flex flex-col items-center py-2">
+                  <User className="h-5 w-5 mb-1" />
                   <span className="text-xs">Account</span>
                 </TabsTrigger>
               </TabsList>
@@ -267,10 +381,13 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
               <TabsContent value="appearance" className="space-y-4">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between space-x-2">
-                    <Label htmlFor="dark-mode" className="flex flex-col space-y-1">
+                    <Label
+                      htmlFor="dark-mode"
+                      className="flex flex-col space-y-1"
+                    >
                       <span>Dark Mode</span>
                       <span className="font-normal text-xs text-gray-500">
-                        Use dark theme
+                        Use dark theme for the app
                       </span>
                     </Label>
                     <Switch 
@@ -289,7 +406,7 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                     >
                       <span>Reduce Motion</span>
                       <span className="font-normal text-xs text-gray-500">
-                        Minimize animations
+                        Minimize animations throughout the app
                       </span>
                     </Label>
                     <Switch 
@@ -319,6 +436,48 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                       }
                     />
                   </div>
+
+                  {/* Background Gradient Selection */}
+                  <div className="pt-4 border-t border-gray-100">
+                    <Label className="flex items-center space-x-2 mb-3">
+                      <Palette className="h-5 w-5 text-primary-emerald" />
+                      <span>Background Gradient</span>
+                    </Label>
+                    
+                    <div className="grid grid-cols-3 gap-3 mt-2">
+                      {gradientOptions.map((gradient) => {
+                        // Generate a random preview for the random option
+                        let previewStyle = gradient.preview;
+                        
+                        if (gradient.id === 'random') {
+                          // Show a random gradient from our JSON file
+                          const randomGradient = generateRandomGradient();
+                          previewStyle = `linear-gradient(135deg, rgb(${randomGradient[0]}) 0%, rgb(${randomGradient[1]}) 100%)`;
+                        }
+                        
+                        return (
+                          <div 
+                            key={gradient.id}
+                            className={`
+                              cursor-pointer rounded-lg overflow-hidden border-2 transition-all
+                              ${settings.appearance.backgroundGradient === gradient.id 
+                                ? 'border-primary-emerald scale-105 shadow-md' 
+                                : 'border-transparent hover:border-gray-200'}
+                            `}
+                            onClick={() => updateSetting("appearance", "backgroundGradient", gradient.id)}
+                          >
+                            <div 
+                              className="h-16 w-full" 
+                              style={{ background: previewStyle }}
+                            />
+                            <div className="text-xs text-center py-1 px-1 truncate">
+                              {gradient.name}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               </TabsContent>
 
@@ -331,7 +490,7 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                     >
                       <span>Google Calendar</span>
                       <span className="font-normal text-xs text-gray-500">
-                        Sync with Google Calendar
+                        Sync birthdays with Google Calendar
                       </span>
                     </Label>
                     <Switch 
@@ -367,10 +526,13 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                   </div>
 
                   <div className="flex items-center justify-between space-x-2">
-                    <Label htmlFor="week-start" className="flex flex-col space-y-1">
+                    <Label
+                      htmlFor="week-start"
+                      className="flex flex-col space-y-1"
+                    >
                       <span>Week Starts On</span>
                       <span className="font-normal text-xs text-gray-500">
-                        Set first day of week
+                        Set the first day of the week
                       </span>
                     </Label>
                     <select 

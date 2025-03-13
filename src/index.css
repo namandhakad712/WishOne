@@ -109,6 +109,11 @@
   background-image: linear-gradient(135deg, #a17dd0 0%, #7c5bb7 100%);
 }
 
+/* Adaptive text color class */
+.text-adaptive {
+  @apply transition-colors duration-300;
+}
+
 .button-primary {
   @apply bg-[#a17dd0] hover:bg-[#7c5bb7] text-white font-medium py-3 px-6 rounded-xl transition-colors;
 }

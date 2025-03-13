@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Wifi, WifiOff, AlertCircle } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Loader2, Wifi, WifiOff } from 'lucide-react';
 
 interface ConnectionStatus {
   status: 'loading' | 'online' | 'offline';
@@ -23,15 +22,13 @@ export function SupabaseStatus() {
         if (!supabaseUrl || !supabaseKey) {
           setConnectionStatus({
             status: 'offline',
-            error: 'Missing Supabase credentials. Check your environment variables.'
+            error: 'Missing credentials'
           });
           return;
         }
         
         // Use a simple health check endpoint
         const healthUrl = `${supabaseUrl}/rest/v1/`;
-        
-        console.log('Checking Supabase status at:', healthUrl);
         
         const response = await fetch(healthUrl, {
           method: 'GET',
@@ -47,28 +44,15 @@ export function SupabaseStatus() {
             error: null
           });
         } else {
-          const errorText = await response.text();
-          let errorMessage = `Status ${response.status}`;
-          
-          try {
-            // Try to parse the error as JSON
-            const errorJson = JSON.parse(errorText);
-            errorMessage = errorJson.message || errorJson.error || errorText;
-          } catch (e) {
-            // If not JSON, use the text as is
-            errorMessage = errorText;
-          }
-          
           setConnectionStatus({
             status: 'offline',
-            error: errorMessage
+            error: 'Connection failed'
           });
         }
       } catch (error) {
-        console.error('Error checking Supabase connection:', error);
         setConnectionStatus({
           status: 'offline',
-          error: error instanceof Error ? error.message : 'Unknown error'
+          error: 'Connection error'
         });
       }
     };
@@ -82,52 +66,13 @@ export function SupabaseStatus() {
   }, []);
   
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div className="fixed bottom-0 right-0 p-2 m-2 bg-white/80 backdrop-blur-sm rounded-md shadow-sm flex items-center text-xs cursor-help">
-            <span className="mr-1 text-gray-600">Status:</span>
-            {connectionStatus.status === 'loading' && (
-              <span className="flex items-center text-gray-500">
-                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                Checking...
-              </span>
-            )}
-            {connectionStatus.status === 'online' && (
-              <span className="flex items-center text-green-600">
-                <Wifi className="h-3 w-3 mr-1" />
-                Online
-              </span>
-            )}
-            {connectionStatus.status === 'offline' && (
-              <span className="flex items-center text-red-600">
-                <WifiOff className="h-3 w-3 mr-1" />
-                Offline
-                {connectionStatus.error && (
-                  <AlertCircle className="h-3 w-3 ml-1" />
-                )}
-              </span>
-            )}
-          </div>
-        </TooltipTrigger>
-        <TooltipContent side="top" className="max-w-xs">
-          {connectionStatus.status === 'loading' && (
-            <p>Checking database connection...</p>
-          )}
-          {connectionStatus.status === 'online' && (
-            <p>Database connection is working properly.</p>
-          )}
-          {connectionStatus.status === 'offline' && (
-            <div>
-              <p className="font-semibold text-red-600">Database connection error:</p>
-              <p className="mt-1">{connectionStatus.error || 'Could not connect to database'}</p>
-              <p className="mt-2 text-xs">
-                Check your environment variables and database configuration.
-              </p>
-            </div>
-          )}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <div className={`fixed bottom-4 right-4 ${connectionStatus.status === 'online' ? 'bg-green-800' : connectionStatus.status === 'offline' ? 'bg-red-800' : 'bg-gray-800'} text-white p-3 rounded-lg shadow-lg z-50 max-w-md flex items-center`}>
+      <div className={`w-2 h-2 rounded-full mr-2 ${connectionStatus.status === 'online' ? 'bg-green-400' : connectionStatus.status === 'offline' ? 'bg-red-400' : 'bg-gray-400 animate-pulse'}`}></div>
+      <span>
+        {connectionStatus.status === 'loading' && 'Connecting...'}
+        {connectionStatus.status === 'online' && 'Online'}
+        {connectionStatus.status === 'offline' && 'Offline'}
+      </span>
+    </div>
   );
 } 

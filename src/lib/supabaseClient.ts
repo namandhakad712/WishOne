@@ -19,7 +19,7 @@ if (import.meta.env.DEV) {
 }
 
 // Create the Supabase client with explicit options
-const supabase = createClient<Database>(
+export const supabase = createClient<Database>(
   supabaseUrl || "", 
   supabaseAnonKey || "",
   {
@@ -69,6 +69,32 @@ export const signUp = async (email: string, password: string) => {
   }
 };
 
+export const signInWithGoogle = async () => {
+  console.log("Attempting to sign in with Google");
+  
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      }
+    });
+    
+    if (error) {
+      console.error("Supabase Google signin error:", error);
+      console.error("Error message:", error.message);
+      console.error("Error status:", error.status);
+    } else {
+      console.log("Google signin initiated");
+    }
+    
+    return { data, error };
+  } catch (unexpectedError) {
+    console.error("Unexpected error during Google signin:", unexpectedError);
+    throw unexpectedError;
+  }
+};
+
 export const signIn = async (email: string, password: string) => {
   console.log("Attempting to sign in with email:", email);
   
@@ -99,8 +125,8 @@ export const signOut = async () => {
     console.log("Attempting to sign out...");
     
     // First, try the normal sign out
-    const { error } = await supabase.auth.signOut();
-    
+  const { error } = await supabase.auth.signOut();
+  
     if (error) {
       console.error("Error during sign out:", error);
       
@@ -128,8 +154,8 @@ export const signOut = async () => {
         
         // Force reload the page to clear any in-memory state
         window.location.href = '/';
-        
-        return true;
+  
+  return true;
       }
       
       throw error;
@@ -257,18 +283,18 @@ export const getBirthdays = async () => {
   
   return retryOperation(async () => {
     try {
-      const { data, error } = await supabase
-        .from("birthdays")
-        .select("*")
+  const { data, error } = await supabase
+    .from("birthdays")
+    .select("*")
         .eq("user_id", session.user.id)
-        .order("date");
-      
-      if (error) {
-        console.error("Error fetching birthdays:", error);
-        throw error;
-      }
-      
-      console.log(`Found ${data?.length || 0} birthdays`);
+    .order("date");
+  
+  if (error) {
+    console.error("Error fetching birthdays:", error);
+    throw error;
+  }
+  
+  console.log(`Found ${data?.length || 0} birthdays`);
       return data || [];
     } catch (error) {
       console.error("Error in getBirthdays:", error);
@@ -337,39 +363,39 @@ export const addBirthday = async (birthday: {
         }
       } catch (debugErr) {
         console.error("Error running auth debug:", debugErr);
-      }
-      
-      // Ensure the date is in the correct format (YYYY-MM-DD)
-      let formattedDate = birthday.date;
-      if (formattedDate && !formattedDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        console.warn("Date format is not YYYY-MM-DD, attempting to format:", formattedDate);
-        try {
-          const dateObj = new Date(formattedDate);
-          formattedDate = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
-          console.log("Reformatted date:", formattedDate);
-        } catch (error) {
-          console.error("Error formatting date:", error);
+  }
+  
+  // Ensure the date is in the correct format (YYYY-MM-DD)
+  let formattedDate = birthday.date;
+  if (formattedDate && !formattedDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    console.warn("Date format is not YYYY-MM-DD, attempting to format:", formattedDate);
+    try {
+      const dateObj = new Date(formattedDate);
+      formattedDate = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+      console.log("Reformatted date:", formattedDate);
+    } catch (error) {
+      console.error("Error formatting date:", error);
           throw new Error("Invalid date format");
-        }
-      }
-      
-      const birthdayData = {
-        ...birthday,
-        date: formattedDate,
+    }
+  }
+  
+  const birthdayData = {
+    ...birthday,
+    date: formattedDate,
         user_id: session.user.id
-      };
-      
-      console.log("Saving birthday data:", birthdayData);
-      
+  };
+  
+  console.log("Saving birthday data:", birthdayData);
+  
       // First try with upsert instead of insert
-      const { data, error } = await supabase
-        .from("birthdays")
+  const { data, error } = await supabase
+    .from("birthdays")
         .upsert(birthdayData)
-        .select()
-        .single();
-      
-      if (error) {
-        console.error("Error adding birthday:", error);
+    .select()
+    .single();
+  
+  if (error) {
+    console.error("Error adding birthday:", error);
         console.error("Error code:", error.code);
         console.error("Error message:", error.message);
         console.error("Error details:", error.details);
@@ -392,10 +418,10 @@ export const addBirthday = async (birthday: {
           return insertData;
         }
         
-        throw error;
-      }
-      
-      console.log("Birthday added successfully:", data);
+    throw error;
+  }
+  
+  console.log("Birthday added successfully:", data);
       return data;
     } catch (error) {
       console.error("Error in addBirthday:", error);
@@ -443,6 +469,7 @@ export const updateBirthday = async (
     relation: string;
     reminder_days: number;
     google_calendar_linked: boolean;
+    google_calendar_event_id: string;
     notes: string;
   }>
 ) => {
@@ -451,13 +478,37 @@ export const updateBirthday = async (
   if (!session?.user) throw new Error("No user logged in");
   
   try {
+    // First, get the birthday to check if it's linked to Google Calendar
+    const { data: birthday, error: fetchError } = await supabase
+      .from("birthdays")
+      .select("google_calendar_event_id, google_calendar_linked")
+      .eq("id", id)
+      .eq("user_id", session.user.id)
+      .single();
+      
+    if (fetchError) {
+      console.error("Error fetching birthday:", fetchError);
+      throw fetchError;
+    }
+    
+    // If linked to Google Calendar, update there first
+    if (birthday?.google_calendar_linked && birthday?.google_calendar_event_id && session.provider_token) {
+      try {
+        // Import here to avoid circular dependencies
+        const { updateBirthdayInGoogleCalendar } = await import('./calendarService');
+        await updateBirthdayInGoogleCalendar(updates, birthday.google_calendar_event_id);
+      } catch (calendarError) {
+        console.error("Error updating in Google Calendar:", calendarError);
+        // Continue with update in database even if Calendar update fails
+      }
+    }
+    
+    // Update in database
     const { data, error } = await supabase
       .from("birthdays")
       .update(updates)
       .eq("id", id)
-      .eq("user_id", session.user.id) // Ensure user owns this birthday
-      .select()
-      .single();
+      .eq("user_id", session.user.id);
     
     if (error) {
       console.error("Error updating birthday:", error);
@@ -477,17 +528,43 @@ export const deleteBirthday = async (id: string) => {
   if (!session?.user) throw new Error("No user logged in");
   
   try {
+    // First, get the birthday to check if it's linked to Google Calendar
+    const { data: birthday, error: fetchError } = await supabase
+      .from("birthdays")
+      .select("google_calendar_event_id, google_calendar_linked")
+      .eq("id", id)
+      .eq("user_id", session.user.id)
+      .single();
+      
+    if (fetchError) {
+      console.error("Error fetching birthday:", fetchError);
+      throw fetchError;
+    }
+    
+    // If linked to Google Calendar, delete from there first
+    if (birthday?.google_calendar_linked && birthday?.google_calendar_event_id && session.provider_token) {
+      try {
+        // Import here to avoid circular dependencies
+        const { deleteBirthdayFromGoogleCalendar } = await import('./calendarService');
+        await deleteBirthdayFromGoogleCalendar(birthday.google_calendar_event_id);
+      } catch (calendarError) {
+        console.error("Error deleting from Google Calendar:", calendarError);
+        // Continue with deletion from database even if Calendar deletion fails
+      }
+    }
+    
+    // Delete from database
     const { error } = await supabase
       .from("birthdays")
       .delete()
       .eq("id", id)
-      .eq("user_id", session.user.id); // Ensure user owns this birthday
-    
+      .eq("user_id", session.user.id);
+  
     if (error) {
       console.error("Error deleting birthday:", error);
       throw error;
     }
-    
+  
     return true;
   } catch (error) {
     console.error("Error in deleteBirthday:", error);
@@ -557,8 +634,8 @@ export const saveUserSettings = async (settings: any) => {
     } else {
       // Update existing user's settings
       const { error: updateError } = await supabase
-        .from("users")
-        .update({ settings })
+    .from("users")
+    .update({ settings })
         .eq("id", session.user.id);
         
       if (updateError) {
@@ -568,8 +645,8 @@ export const saveUserSettings = async (settings: any) => {
     }
     
     // Save to localStorage as fallback
-    localStorage.setItem('wishone_settings', JSON.stringify(settings));
-    
+  localStorage.setItem('wishone_settings', JSON.stringify(settings));
+  
     return { settings };
   } catch (error) {
     console.error("Error saving settings:", error);
@@ -580,63 +657,95 @@ export const saveUserSettings = async (settings: any) => {
 };
 
 export const getUserSettings = async () => {
-  const { data: { session } } = await supabase.auth.getSession();
-  
-  if (!session?.user) {
-    // If not logged in, try to get from localStorage
-    const localSettings = localStorage.getItem('wishone_settings');
-    return localSettings ? JSON.parse(localSettings) : null;
-  }
-  
   try {
-    // First, check if user exists in the users table
-    const { data: existingUser, error } = await supabase
-      .from("users")
-      .select("settings")
-      .eq("id", session.user.id)
-      .single();
+    // First, try to get settings from localStorage as an immediate fallback
+    const localSettings = localStorage.getItem('wishone_settings');
+    let localSettingsObj = null;
     
-    if (error) {
-      if (error.code === 'PGRST116') {
-        // User doesn't exist in the users table, try to create them
-        try {
-          const { error: upsertError } = await supabase
-            .from("users")
-            .upsert({
-              id: session.user.id,
-              email: session.user.email || '',
-              settings: null
-            });
-            
-          if (upsertError && upsertError.code !== '23505') {
-            console.error("Error creating user record:", upsertError);
+    if (localSettings) {
+      try {
+        localSettingsObj = JSON.parse(localSettings);
+      } catch (parseError) {
+        console.error("Error parsing local settings:", parseError);
+      }
+    }
+    
+    // Try to get the current session
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    // If no session, return local settings or null
+    if (!session) {
+      console.log("No active session, using local settings");
+      return localSettingsObj;
+    }
+    
+    // Try to get user settings from Supabase with timeout
+    const fetchWithTimeout = async () => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
+      try {
+        const { data: existingUser, error } = await supabase
+          .from("users")
+          .select("settings")
+          .eq("id", session.user.id)
+          .single();
+          
+        clearTimeout(timeoutId);
+        
+        if (error) {
+          if (error.code === 'PGRST116') {
+            // User doesn't exist in the users table, try to create them
+            try {
+              const { error: upsertError } = await supabase
+                .from("users")
+                .upsert({
+                  id: session.user.id,
+                  email: session.user.email || '',
+                  settings: null
+                });
+                
+              if (upsertError && upsertError.code !== '23505') {
+                console.error("Error creating user record:", upsertError);
+              }
+            } catch (insertError) {
+              console.error("Error in user upsert:", insertError);
+            }
+          } else {
+            console.error("Error fetching user settings:", error);
           }
-        } catch (insertError) {
-          console.error("Error in user upsert:", insertError);
+          
+          // Return local settings for any error
+          return localSettingsObj;
         }
         
-        // Fallback to localStorage
-        const localSettings = localStorage.getItem('wishone_settings');
-        return localSettings ? JSON.parse(localSettings) : null;
+        // If settings exist in Supabase, also update localStorage
+        if (existingUser?.settings) {
+          localStorage.setItem('wishone_settings', JSON.stringify(existingUser.settings));
+          return existingUser.settings;
+        }
+        
+        return localSettingsObj;
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        console.error("Error getting settings:", fetchError);
+        return localSettingsObj;
       }
-      
-      console.error("Error fetching user settings:", error);
-      // Fallback to localStorage for other errors
+    };
+    
+    // Try to fetch with timeout
+    return await fetchWithTimeout();
+  } catch (error) {
+    console.error("Error in getUserSettings:", error);
+    
+    // Final fallback - try to get from localStorage
+    try {
       const localSettings = localStorage.getItem('wishone_settings');
       return localSettings ? JSON.parse(localSettings) : null;
+    } catch (localError) {
+      console.error("Error getting local settings:", localError);
+      return null;
     }
-    
-    // If settings exist in Supabase, also update localStorage
-    if (existingUser?.settings) {
-      localStorage.setItem('wishone_settings', JSON.stringify(existingUser.settings));
-    }
-    
-    return existingUser?.settings || null;
-  } catch (error) {
-    console.error("Error getting settings:", error);
-    // Fallback to localStorage
-    const localSettings = localStorage.getItem('wishone_settings');
-    return localSettings ? JSON.parse(localSettings) : null;
   }
 };
 
@@ -693,22 +802,22 @@ export const uploadProfilePicture = async (file: File): Promise<string> => {
     const compressedFile = new File([compressedBlob], file.name, {
       type: 'image/jpeg',
     });
-    
-    // Create a unique file path for the user's avatar
+  
+  // Create a unique file path for the user's avatar
     const fileName = `avatar-${Math.random().toString(36).substring(2)}.jpg`;
     
     // Try to upload directly to the root of the bucket
     console.log("Uploading to profiles bucket");
     
     const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('profiles')
+    .from('profiles')
       .upload(fileName, compressedFile, {
         cacheControl: '3600',
         upsert: true
       });
-    
-    if (uploadError) {
-      console.error("Error uploading file:", uploadError);
+  
+  if (uploadError) {
+    console.error("Error uploading file:", uploadError);
       console.error("Error details:", uploadError.message);
       
       // If direct upload fails, fall back to data URL
@@ -726,19 +835,19 @@ export const uploadProfilePicture = async (file: File): Promise<string> => {
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
-    }
-    
-    // Get the public URL for the uploaded file
-    const { data } = supabase.storage
-      .from('profiles')
+  }
+  
+  // Get the public URL for the uploaded file
+  const { data } = supabase.storage
+    .from('profiles')
       .getPublicUrl(fileName);
-    
-    if (!data.publicUrl) {
-      throw new Error("Could not get public URL for uploaded file");
-    }
-    
+  
+  if (!data.publicUrl) {
+    throw new Error("Could not get public URL for uploaded file");
+  }
+  
     console.log("Upload successful, URL:", data.publicUrl);
-    return data.publicUrl;
+  return data.publicUrl;
   } catch (error) {
     console.error("Error processing or uploading image:", error);
     
@@ -759,9 +868,6 @@ export const uploadProfilePicture = async (file: File): Promise<string> => {
     });
   }
 };
-
-// Export the Supabase client
-export { supabase };
 
 // Export a function to check if Supabase is connected
 export const checkConnection = async () => {
