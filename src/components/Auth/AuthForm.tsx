@@ -7,9 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Sparkles, Mail, Lock } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import { motion } from "framer-motion";
 
 export function AuthForm() {
   const [email, setEmail] = useState("");
@@ -147,22 +148,68 @@ export function AuthForm() {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <CardHeader>
-          <CardTitle className="text-2xl text-center">WishOne</CardTitle>
-          <CardDescription className="text-center">
+    <Card className="w-full max-w-md mx-auto bg-white/40 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/50 overflow-hidden">
+      {/* Glass overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 pointer-events-none z-0"></div>
+      
+      {/* Floating elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div 
+          className="absolute w-20 h-20 rounded-full bg-purple-300/30 backdrop-blur-md"
+          animate={{ 
+            x: [0, 10, 0], 
+            y: [0, -15, 0],
+            scale: [1, 1.1, 1]
+          }}
+          transition={{ 
+            repeat: Infinity, 
+            duration: 5,
+            ease: "easeInOut" 
+          }}
+          style={{ top: '15%', right: '10%' }}
+        />
+        <motion.div 
+          className="absolute w-16 h-16 rounded-full bg-pink-300/30 backdrop-blur-md"
+          animate={{ 
+            x: [0, -10, 0], 
+            y: [0, 10, 0],
+            scale: [1, 1.05, 1]
+          }}
+          transition={{ 
+            repeat: Infinity, 
+            duration: 7,
+            ease: "easeInOut" 
+          }}
+          style={{ bottom: '20%', left: '10%' }}
+        />
+      </div>
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="relative z-10">
+        <CardHeader className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-md border-b border-white/30">
+          <div className="flex justify-center mb-4">
+            <motion.div 
+              className="h-16 w-16 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center border-2 border-white/70 shadow-lg"
+              animate={{ y: [0, -5, 0] }}
+              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+            >
+              <span className="text-purple-600 font-bold text-2xl flex items-center gap-1">
+                W<Sparkles className="h-4 w-4 text-yellow-500" />
+              </span>
+            </motion.div>
+          </div>
+          <CardTitle className="text-2xl text-center text-gray-800 font-bold">WishOne</CardTitle>
+          <CardDescription className="text-center text-gray-600">
             Never forget a birthday again
           </CardDescription>
-          <TabsList className="grid w-full grid-cols-2 mt-4">
-            <TabsTrigger value="signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 mt-4 bg-white/50 backdrop-blur-md p-1 rounded-xl">
+            <TabsTrigger value="signin" className="rounded-lg data-[state=active]:bg-white/80 data-[state=active]:backdrop-blur-md data-[state=active]:shadow-sm">Sign In</TabsTrigger>
+            <TabsTrigger value="signup" className="rounded-lg data-[state=active]:bg-white/80 data-[state=active]:backdrop-blur-md data-[state=active]:shadow-sm">Sign Up</TabsTrigger>
           </TabsList>
         </CardHeader>
 
         {errorMessage && (
           <div className="px-6">
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="bg-red-50/80 backdrop-blur-sm border border-red-200">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Error</AlertTitle>
               <AlertDescription>{errorMessage}</AlertDescription>
@@ -172,31 +219,47 @@ export function AuthForm() {
 
         <TabsContent value="signin">
           <form onSubmit={handleSignIn}>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 p-6 bg-gradient-to-b from-white/40 to-white/20 backdrop-blur-md">
               <div className="space-y-2">
-                <Label htmlFor="signin-email">Email</Label>
-                <Input
-                  id="signin-email"
-                  type="email"
-                  placeholder="your.email@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+                <Label htmlFor="signin-email" className="text-gray-700 flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-purple-500" />
+                  Email
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="signin-email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="bg-white/60 backdrop-blur-md border-white/50 rounded-xl h-11 pl-4 focus-visible:ring-purple-500 focus-visible:border-purple-500"
+                  />
+                </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="signin-password">Password</Label>
-                <Input
-                  id="signin-password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+                <Label htmlFor="signin-password" className="text-gray-700 flex items-center gap-2">
+                  <Lock className="h-4 w-4 text-purple-500" />
+                  Password
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="signin-password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="bg-white/60 backdrop-blur-md border-white/50 rounded-xl h-11 pl-4 focus-visible:ring-purple-500 focus-visible:border-purple-500"
+                  />
+                </div>
               </div>
             </CardContent>
-            <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full" disabled={loading || googleLoading}>
+            <CardFooter className="flex flex-col gap-4 p-6 bg-white/30 backdrop-blur-md border-t border-white/30">
+              <Button 
+                type="submit" 
+                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-md rounded-xl h-11" 
+                disabled={loading || googleLoading}
+              >
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -208,15 +271,15 @@ export function AuthForm() {
               </Button>
               
               <div className="flex items-center w-full gap-2 my-2">
-                <Separator className="flex-1" />
-                <span className="text-xs text-muted-foreground">OR</span>
-                <Separator className="flex-1" />
+                <Separator className="flex-1 bg-white/50" />
+                <span className="text-xs text-gray-600">OR</span>
+                <Separator className="flex-1 bg-white/50" />
               </div>
               
               <Button 
                 type="button" 
                 variant="outline" 
-                className="w-full flex items-center justify-center gap-2"
+                className="w-full flex items-center justify-center gap-2 border-white/50 bg-white/60 backdrop-blur-md text-gray-700 hover:bg-white/70 rounded-xl h-11"
                 onClick={handleGoogleSignIn}
                 disabled={loading || googleLoading}
               >
@@ -237,40 +300,67 @@ export function AuthForm() {
                   </>
                 )}
               </Button>
+              
+              <div className="text-center text-sm text-gray-600">
+                Don't have an account?{" "}
+                <button
+                  type="button"
+                  className="text-purple-600 hover:text-purple-800 font-medium"
+                  onClick={() => setActiveTab("signup")}
+                >
+                  Sign up
+                </button>
+              </div>
             </CardFooter>
           </form>
         </TabsContent>
 
         <TabsContent value="signup">
           <form onSubmit={handleSignUp}>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 p-6 bg-gradient-to-b from-white/40 to-white/20 backdrop-blur-md">
               <div className="space-y-2">
-                <Label htmlFor="signup-email">Email</Label>
-                <Input
-                  id="signup-email"
-                  type="email"
-                  placeholder="your.email@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+                <Label htmlFor="signup-email" className="text-gray-700 flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-purple-500" />
+                  Email
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="signup-email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="bg-white/60 backdrop-blur-md border-white/50 rounded-xl h-11 pl-4 focus-visible:ring-purple-500 focus-visible:border-purple-500"
+                  />
+                </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="signup-password">Password</Label>
-                <Input
-                  id="signup-password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-                <p className="text-xs text-muted-foreground">
+                <Label htmlFor="signup-password" className="text-gray-700 flex items-center gap-2">
+                  <Lock className="h-4 w-4 text-purple-500" />
+                  Password
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="signup-password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="bg-white/60 backdrop-blur-md border-white/50 rounded-xl h-11 pl-4 focus-visible:ring-purple-500 focus-visible:border-purple-500"
+                  />
+                </div>
+                <p className="text-xs text-gray-600 pl-6">
                   Password must be at least 6 characters long
                 </p>
               </div>
             </CardContent>
-            <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full" disabled={loading || googleLoading}>
+            <CardFooter className="flex flex-col gap-4 p-6 bg-white/30 backdrop-blur-md border-t border-white/30">
+              <Button 
+                type="submit" 
+                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-md rounded-xl h-11" 
+                disabled={loading || googleLoading}
+              >
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -282,15 +372,15 @@ export function AuthForm() {
               </Button>
               
               <div className="flex items-center w-full gap-2 my-2">
-                <Separator className="flex-1" />
-                <span className="text-xs text-muted-foreground">OR</span>
-                <Separator className="flex-1" />
+                <Separator className="flex-1 bg-white/50" />
+                <span className="text-xs text-gray-600">OR</span>
+                <Separator className="flex-1 bg-white/50" />
               </div>
               
               <Button 
                 type="button" 
                 variant="outline" 
-                className="w-full flex items-center justify-center gap-2"
+                className="w-full flex items-center justify-center gap-2 border-white/50 bg-white/60 backdrop-blur-md text-gray-700 hover:bg-white/70 rounded-xl h-11"
                 onClick={handleGoogleSignIn}
                 disabled={loading || googleLoading}
               >
@@ -312,11 +402,11 @@ export function AuthForm() {
                 )}
               </Button>
               
-              <div className="text-xs text-center text-muted-foreground">
+              <div className="text-center text-sm text-gray-600">
                 Already have an account?{" "}
                 <button
                   type="button"
-                  className="text-primary-emerald hover:underline"
+                  className="text-purple-600 hover:text-purple-800 font-medium"
                   onClick={() => setActiveTab("signin")}
                 >
                   Sign in
