@@ -55,51 +55,32 @@ const CalendarPage: React.FC = () => {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
-          navigate('/login');
+          navigate('/');
           return;
         }
-        
-        const { data, error } = await supabase
+
+        const { data: birthdayData, error: birthdayError } = await supabase
           .from('birthdays')
           .select('*')
           .eq('user_id', session.user.id);
-          
-        if (error) {
-          throw error;
+
+        if (birthdayError) {
+          throw birthdayError;
         }
-        
-        console.log("Raw birthday data from Supabase:", data);
-        
-        // Convert string dates to Date objects
-        const formattedBirthdays = data.map(birthday => ({
+
+        if (!birthdayData) {
+          console.log("No birthdays found");
+          setBirthdayRecords([]);
+          return;
+        }
+
+        // Format the birthday dates
+        const formattedBirthdays = birthdayData.map(birthday => ({
           ...birthday,
           date: new Date(birthday.date)
         }));
-        
-        console.log("Formatted birthdays with Date objects:", formattedBirthdays);
-        
-        // Add a test birthday for debugging if there are no birthdays
-        if (formattedBirthdays.length === 0) {
-          const today = new Date();
-          const nextWeek = new Date(today);
-          nextWeek.setDate(today.getDate() + 7);
-          
-          // Create a test birthday with all required fields
-          formattedBirthdays.push({
-            id: 'test-id',
-            name: 'Test Birthday',
-            date: nextWeek,
-            relation: 'Test',
-            reminder_days: 3,
-            google_calendar_linked: false,
-            user_id: session.user.id,
-            created_at: new Date().toISOString(),
-            notes: null
-          });
-          
-          console.log("Added test birthday for debugging");
-        }
-        
+
+        console.log("Fetched birthdays:", formattedBirthdays);
         setBirthdayRecords(formattedBirthdays);
       } catch (error) {
         console.error('Error fetching birthdays:', error);

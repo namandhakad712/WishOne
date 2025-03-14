@@ -122,33 +122,7 @@ const isUpcomingBirthday = (birthdayDate: Date, daysAhead: number = 30): boolean
 };
 
 const CalendarWidget = ({
-  birthdays = [
-    {
-      id: "1",
-      name: "Emma Thompson",
-      date: new Date(new Date().getFullYear(), new Date().getMonth(), 15),
-      relation: "Friend",
-      hasReminder: true,
-    },
-    {
-      id: "2",
-      name: "Michael Chen",
-      date: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 3),
-      relation: "Family",
-      hasReminder: true,
-    },
-    {
-      id: "3",
-      name: "Sophia Rodriguez",
-      date: new Date(
-        new Date().getFullYear(),
-        new Date().getMonth(),
-        new Date().getDate() + 5,
-      ),
-      relation: "Colleague",
-      hasReminder: false,
-    },
-  ],
+  birthdays = [],
   onSelectBirthday = () => {},
   onAddBirthday = () => {},
 }: CalendarWidgetProps) => {
