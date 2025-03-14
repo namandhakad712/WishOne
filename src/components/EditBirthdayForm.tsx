@@ -5,6 +5,8 @@ import * as z from "zod";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, User, Tag, Bell } from "lucide-react";
 import { Switch } from '@/components/ui/switch';
+import { cn } from "@/lib/utils";
+
 import {
   Dialog,
   DialogContent,
@@ -165,35 +167,72 @@ const EditBirthdayForm: React.FC<EditBirthdayFormProps> = ({
               name="date"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel className="text-purple-700">
-                    Birthday Date
-                  </FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={"w-full pl-3 text-left font-normal"}
-                          type="button"
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4 text-gray-400" />
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span className="text-gray-400">Select a date</span>
-                          )}
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <FormLabel className="text-purple-700">Birthday Date</FormLabel>
+                  <div className="relative">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4 text-purple-500" />
+                            {field.value ? (
+                              format(field.value, "MMMM d, yyyy")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                          className="rounded-md border-purple-100"
+                          classNames={{
+                            months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+                            month: "space-y-4",
+                            caption: "flex justify-center pt-1 relative items-center text-purple-900",
+                            caption_label: "text-sm font-medium",
+                            nav: "space-x-1 flex items-center",
+                            nav_button: cn(
+                              "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 hover:bg-purple-100 text-purple-600 rounded-full transition-colors",
+                            ),
+                            nav_button_previous: "absolute left-1",
+                            nav_button_next: "absolute right-1",
+                            table: "w-full border-collapse space-y-1",
+                            head_row: "flex",
+                            head_cell: "text-purple-500 rounded-md w-8 font-normal text-[0.8rem]",
+                            row: "flex w-full mt-2",
+                            cell: cn(
+                              "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-purple-100",
+                              "first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md"
+                            ),
+                            day: cn(
+                              "h-8 w-8 p-0 font-normal aria-selected:opacity-100 hover:bg-purple-100 rounded-full transition-colors",
+                            ),
+                            day_range_end: "day-range-end",
+                            day_selected:
+                              "bg-purple-600 text-white hover:bg-purple-700 hover:text-white focus:bg-purple-700 focus:text-white",
+                            day_today: "bg-purple-100 text-purple-900",
+                            day_outside: "text-gray-400 opacity-50 aria-selected:bg-purple-100/50",
+                            day_disabled: "text-gray-400 opacity-50 hover:bg-transparent",
+                            day_range_middle:
+                              "aria-selected:bg-purple-100 aria-selected:text-purple-900",
+                            day_hidden: "invisible",
+                          }}
+                          fromYear={1900}
+                          toYear={new Date().getFullYear()}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
