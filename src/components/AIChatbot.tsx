@@ -19,8 +19,10 @@ import {
   X,
   Heart,
   MessageCircle,
+  User,
 } from "lucide-react";
 import { generateResponse, analyzeImage } from "@/lib/gemini";
+import { useSupabase } from "@/contexts/SupabaseContext";
 
 interface Message {
   id: string;
@@ -61,9 +63,30 @@ const AIChatbot = ({
   const [isLoading, setIsLoading] = useState(false);
   const [imageData, setImageData] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const { user } = useSupabase();
 
   // Use props messages if provided, otherwise use local state
   const displayMessages = messages.length > 0 ? messages : localMessages;
+
+  // Get user's avatar URL from metadata
+  const userAvatarUrl = user?.user_metadata?.avatar_url;
+  
+  console.log("User data in AIChatbot:", user);
+  console.log("Avatar URL from metadata:", userAvatarUrl);
+  
+  // If no avatar URL is found, generate one on the fly
+  const generateFallbackAvatarUrl = () => {
+    if (user?.id) {
+      return `https://api.dicebear.com/7.x/lorelei-neutral/svg?seed=${user.id}`;
+    }
+    return undefined;
+  };
+  
+  const effectiveUserAvatarUrl = userAvatarUrl || generateFallbackAvatarUrl();
+
+  // Cute Avatar Sketch API URL for the chatbot with specific parameters
+  // happy, generic-short-hair, mole-on-left-chin, none
+  const chatbotAvatarUrl = "https://cute-avatar-sketch.yukilun.com/api/avatar/?facial-expression=happy&hairstyle=generic-short-hair&facial-feature=mole-on-left-chin&accessory=none";
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -157,23 +180,23 @@ const AIChatbot = ({
   };
 
   return (
-    <div className="flex flex-col h-[500px] w-full sm:w-[400px] rounded-xl shadow-lg bg-white border border-gray-100 overflow-hidden">
+    <div className="flex flex-col h-[500px] w-full sm:w-[400px] rounded-xl shadow-lg bg-white/60 backdrop-blur-sm border border-white/40 overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-purple-100 to-green-100 rounded-t-xl">
+      <div className="p-4 border-b border-white/40 bg-gradient-to-r from-purple-500/20 to-purple-600/20 backdrop-blur-sm rounded-t-xl">
         <div className="flex items-center gap-3">
-          <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
+          <Avatar className="h-10 w-10 border-2 border-white/80 shadow-sm">
             <AvatarImage
-              src="https://api.dicebear.com/7.x/thumbs/svg?seed=wishone&backgroundColor=gradient&gradientColors[]=a78bfa,bef264"
+              src={chatbotAvatarUrl}
               alt="WishOne"
             />
-            <AvatarFallback className="bg-gradient-to-r from-purple-200 to-green-200 text-purple-700">
+            <AvatarFallback className="bg-gradient-to-r from-purple-200 to-blue-200 text-purple-700">
               WO
             </AvatarFallback>
           </Avatar>
           <div>
-            <h2 className="text-lg font-semibold text-purple-700">WishOne Companion</h2>
+            <h2 className="text-lg font-bold text-purple-800">WishOne Companion</h2>
             <p className="text-xs text-gray-600 flex items-center gap-1">
-              <Heart className="h-3 w-3 text-pink-500 fill-pink-500" />
+              <Heart className="h-3 w-3 text-purple-600 fill-purple-600" />
               <span>Your emotional support & birthday reminder</span>
             </p>
           </div>
@@ -181,7 +204,7 @@ const AIChatbot = ({
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4 bg-gradient-to-b from-purple-50/30 to-green-50/30" ref={scrollAreaRef}>
+      <ScrollArea className="flex-1 p-4 bg-white/30" ref={scrollAreaRef}>
         <div className="space-y-4">
           {displayMessages.map((message) => (
             <div
@@ -192,12 +215,12 @@ const AIChatbot = ({
                 className={`flex ${message.sender === "user" ? "flex-row-reverse" : "flex-row"} items-end gap-2 max-w-[80%] group`}
               >
                 {message.sender === "ai" && (
-                  <Avatar className="h-8 w-8 border-2 border-green-100 shadow-sm">
+                  <Avatar className="h-11 w-11 border-2 border-white/80 shadow-sm">
                     <AvatarImage
-                      src="https://api.dicebear.com/7.x/thumbs/svg?seed=wishone&backgroundColor=gradient&gradientColors[]=a78bfa,bef264"
+                      src={chatbotAvatarUrl}
                       alt="AI"
                     />
-                    <AvatarFallback className="bg-green-100 text-green-700">
+                    <AvatarFallback className="bg-purple-100 text-purple-700">
                       WO
                     </AvatarFallback>
                   </Avatar>
@@ -206,8 +229,8 @@ const AIChatbot = ({
                   <div 
                     className={`relative rounded-2xl px-4 py-2 text-sm ${
                       message.sender === "user"
-                        ? "bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-br-none shadow-sm"
-                        : "bg-white text-gray-800 rounded-bl-none shadow-sm border border-gray-100"
+                        ? "bg-gradient-to-r from-purple-600/90 to-purple-700/90 text-white rounded-br-none shadow-sm"
+                        : "bg-white/70 backdrop-blur-sm text-gray-800 rounded-bl-none shadow-sm border border-white/40"
                     }`}
                     onDoubleClick={() => onReplyTo(message.id)}
                   >
@@ -243,14 +266,17 @@ const AIChatbot = ({
                   </span>
                 </div>
                 {message.sender === "user" && (
-                  <Avatar className="h-8 w-8 border-2 border-purple-100 shadow-sm">
-                    <AvatarImage
-                      src="https://api.dicebear.com/7.x/thumbs/svg?seed=user&backgroundColor=gradient&gradientColors[]=a78bfa,bef264"
-                      alt="User"
-                    />
-                    <AvatarFallback className="bg-purple-100 text-purple-700">
-                      You
-                    </AvatarFallback>
+                  <Avatar className="h-11 w-11 border-2 border-white/80 shadow-sm">
+                    {effectiveUserAvatarUrl ? (
+                      <AvatarImage
+                        src={effectiveUserAvatarUrl}
+                        alt="User"
+                      />
+                    ) : (
+                      <AvatarFallback className="bg-purple-100">
+                        <User className="h-5 w-5 text-purple-600" />
+                      </AvatarFallback>
+                    )}
                   </Avatar>
                 )}
               </div>
@@ -261,7 +287,7 @@ const AIChatbot = ({
 
       {/* Reply indicator */}
       {replyingTo && (
-        <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+        <div className="px-4 py-2 bg-purple-50/50 border-t border-white/40 flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs text-gray-600">
             <CornerUpLeft className="h-3 w-3" />
             <span>Replying to: </span>
@@ -277,7 +303,7 @@ const AIChatbot = ({
       )}
 
       {/* Input area */}
-      <div className="p-4 border-t border-gray-100 bg-white rounded-b-xl">
+      <div className="p-4 border-t border-white/40 bg-white/50 backdrop-blur-sm rounded-b-xl">
         {imageData && (
           <div className="mb-2 relative">
             <img
@@ -299,15 +325,15 @@ const AIChatbot = ({
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Share your thoughts..."
-            className="min-h-[60px] max-h-[120px] bg-white rounded-xl resize-none border-gray-200 focus:border-purple-300 focus:ring-purple-200"
+            className="min-h-[60px] max-h-[120px] bg-white/70 rounded-xl resize-none border-white/40 focus:border-purple-300 focus:ring-purple-200"
           />
           <div className="flex flex-col gap-2">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <label htmlFor="file-upload" className="cursor-pointer">
-                    <div className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
-                      <ImageIcon className="h-5 w-5 text-gray-700" />
+                    <div className="p-2 rounded-full bg-white/70 hover:bg-white/90 border border-white/40 transition-colors">
+                      <ImageIcon className="h-5 w-5 text-purple-600" />
                     </div>
                   </label>
                 </TooltipTrigger>
@@ -326,7 +352,7 @@ const AIChatbot = ({
             <Button
               onClick={handleSendMessage}
               size="icon"
-              className="rounded-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 shadow-sm"
+              className="rounded-full bg-purple-600/90 hover:bg-purple-700 shadow-sm"
               disabled={(!newMessage.trim() && !imageData) || isLoading}
             >
               {isLoading ? (
@@ -337,15 +363,15 @@ const AIChatbot = ({
             </Button>
           </div>
         </div>
-        <div className="flex justify-between mt-2 text-xs text-gray-500">
+        <div className="flex justify-between mt-2 text-xs text-gray-600">
           <div className="flex items-center gap-2">
-            <Heart className="h-4 w-4 text-pink-500" />
+            <Heart className="h-4 w-4 text-purple-600" />
             <span>AI can make mistakes, Do consider double-checking.</span>
           </div>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-6 px-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50">
+                <Button variant="ghost" size="sm" className="h-6 px-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50/50">
                   <MessageCircle className="h-4 w-4 mr-1" />
                   <span>Features</span>
                 </Button>

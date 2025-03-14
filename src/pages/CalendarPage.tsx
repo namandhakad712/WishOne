@@ -289,34 +289,41 @@ const CalendarPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-b from-purple-100 via-blue-50 to-white p-4 md:p-8 relative overflow-hidden">
+      {/* Glassmorphic background elements */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="absolute -top-64 -right-64 w-[500px] h-[500px] rounded-full bg-purple-300/20 blur-3xl"></div>
+        <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] rounded-full bg-blue-300/20 blur-3xl"></div>
+        <div className="absolute -bottom-64 -left-64 w-[500px] h-[500px] rounded-full bg-green-300/20 blur-3xl"></div>
+      </div>
+      
+      <div className="max-w-7xl mx-auto relative z-10">
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-4">
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={() => navigate('/')}
-              className="rounded-full hover:bg-purple-100"
+              className="rounded-full hover:bg-purple-100/50 bg-white/30 backdrop-blur-sm border border-white/40"
               aria-label="Back to home"
             >
               <ArrowLeft className="h-5 w-5 text-purple-700" />
             </Button>
-            <h1 className="text-3xl font-bold text-purple-800 flex items-center gap-2">
+            <h1 className="text-3xl font-bold text-purple-800 flex items-center gap-2 px-4 py-2 bg-white/30 backdrop-blur-sm rounded-full border border-white/40">
               <CalendarIcon className="h-8 w-8" />
               Birthday Calendar
             </h1>
           </div>
           <Button 
             onClick={handleAddBirthday}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-purple-600/90 hover:bg-purple-700 backdrop-blur-sm rounded-full px-4"
           >
             <Plus className="mr-2 h-4 w-4" /> Add Birthday
           </Button>
         </div>
         
         {loading ? (
-          <div className="text-center py-12">
+          <div className="text-center py-12 bg-white/30 backdrop-blur-md rounded-xl border border-white/40 shadow-lg">
             <p className="text-gray-500">Loading your birthdays...</p>
           </div>
         ) : (

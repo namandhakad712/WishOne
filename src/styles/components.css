@@ -1,0 +1,13 @@
+/* Example component styling using CSS variables */
+.card {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.button {
+  background-color: var(--background-secondary);
+  color: var(--text-primary);
+}
+
+/* Add more component styles as needed */ 

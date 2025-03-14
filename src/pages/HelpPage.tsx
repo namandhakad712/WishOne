@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Search, ArrowLeft, Home, Mail, MessageSquare, ExternalLink, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { ChevronDown, ChevronUp, Search, ArrowLeft, Home, Mail, MessageCircle, ExternalLink, Loader2, CheckCircle, AlertCircle, HelpCircle, Settings, Calendar, User, Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Define FAQ item type
 interface FAQItem {
   question: string;
   answer: string;
   category: string;
+  icon: React.ReactNode;
 }
 
 // Define form state type
@@ -24,8 +26,8 @@ const HelpPage: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [showContactForm, setShowContactForm] = useState(false);
   const [contactForm, setContactForm] = useState({
-    name: '',
-    email: '',
+    name: 'App Developer',
+    email: 'codinggeneraltutorials@gmail.com',
     message: ''
   });
   const [formState, setFormState] = useState<FormState>({
@@ -35,67 +37,82 @@ const HelpPage: React.FC = () => {
     errorMessage: ''
   });
   const [formErrors, setFormErrors] = useState({
-    name: '',
-    email: '',
+    name: 'App Developer',
+    email: 'codinggeneraltutorials@gmail.com',
     message: ''
   });
 
-  // FAQ data
+  // FAQ data with icons
   const faqItems: FAQItem[] = [
     {
       question: "How do I add a new birthday?",
       answer: "To add a new birthday, navigate to the home screen and tap the '+' button. Fill in the name, date, and relationship details, then tap 'Save'.",
-      category: "Birthdays"
+      category: "Birthdays",
+      icon: <Calendar className="h-5 w-5" />
     },
     {
       question: "How do I edit a birthday?",
       answer: "To edit a birthday, find it in your list, tap on it, and select the 'Edit' option. Make your changes and tap 'Save'.",
-      category: "Birthdays"
+      category: "Birthdays",
+      icon: <Calendar className="h-5 w-5" />
     },
     {
       question: "How do I change the app theme?",
       answer: "To change the app theme, go to your profile page and tap 'Settings'. Under the 'Appearance' tab, you can select different background gradients or enable dark mode.",
-      category: "Appearance"
+      category: "Appearance",
+      icon: <Settings className="h-5 w-5" />
     },
     {
       question: "How do I set up reminders?",
       answer: "To set up reminders, go to Settings > Calendar and select your preferred reminder time (1 day, 3 days, 1 week, etc.) before each birthday.",
-      category: "Notifications"
+      category: "Notifications",
+      icon: <Bell className="h-5 w-5" />
     },
     {
       question: "How do I sync with Google Calendar?",
       answer: "To sync with Google Calendar, go to Settings > Calendar and toggle on 'Google Calendar'. You'll be prompted to authorize the connection.",
-      category: "Calendar"
+      category: "Calendar",
+      icon: <Calendar className="h-5 w-5" />
     },
     {
       question: "How do I change my profile picture?",
       answer: "To change your profile picture, go to your profile page and tap on your current picture or the camera icon. You can then select a new image from your device.",
-      category: "Profile"
+      category: "Profile",
+      icon: <User className="h-5 w-5" />
     },
     {
       question: "What happens if I lose internet connection?",
       answer: "WishOne works offline! Your data is stored locally on your device, and it will sync automatically when you reconnect to the internet.",
-      category: "General"
+      category: "General",
+      icon: <HelpCircle className="h-5 w-5" />
     },
     {
       question: "How do I sign out?",
       answer: "To sign out, go to your profile page and tap the 'Sign Out' button at the bottom of the screen.",
-      category: "Account"
+      category: "Account",
+      icon: <User className="h-5 w-5" />
     },
     {
       question: "Is my data secure?",
       answer: "Yes, your data is secure. We use encryption for all data transfers and storage. Your personal information is never shared with third parties.",
-      category: "Privacy"
+      category: "Privacy",
+      icon: <HelpCircle className="h-5 w-5" />
     },
     {
       question: "How do I delete my account?",
       answer: "To delete your account, go to Settings > Account > Privacy Settings, and select 'Delete Account'. This action cannot be undone.",
-      category: "Account"
+      category: "Account",
+      icon: <User className="h-5 w-5" />
     }
   ];
 
-  // Get all unique categories
-  const categories = Array.from(new Set(faqItems.map(item => item.category)));
+  // Get all unique categories with their icons
+  const categoriesWithIcons = Array.from(
+    new Set(faqItems.map(item => item.category))
+  ).map(category => {
+    const icon = faqItems.find(item => item.category === category)?.icon;
+    return { name: category, icon };
+  });
 
   // Filter FAQ items based on search query and active category
   const filteredFAQs = faqItems.filter(item => {
@@ -240,253 +257,327 @@ const HelpPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#e8eeeb] flex flex-col">
-      {/* Header */}
-      <div className="bg-white p-4 shadow-sm flex items-center justify-between">
-        <div className="flex items-center">
-          <button 
-            onClick={() => navigate(-1)} 
-            className="mr-4 h-10 w-10 rounded-full flex items-center justify-center bg-[#f0f4f1] shadow-[inset_2px_2px_5px_rgba(0,0,0,0.05),_inset_-2px_-2px_5px_rgba(255,255,255,0.8)]"
-          >
-            <ArrowLeft className="h-5 w-5 text-[#5a7d7c]" />
-          </button>
-          <h1 className="text-2xl font-serif text-[#5a7d7c]">Help Center</h1>
-        </div>
-        <button 
-          onClick={() => navigate('/')} 
-          className="h-10 w-10 rounded-full flex items-center justify-center bg-[#f0f4f1] shadow-[inset_2px_2px_5px_rgba(0,0,0,0.05),_inset_-2px_-2px_5px_rgba(255,255,255,0.8)]"
-        >
-          <Home className="h-5 w-5 text-[#5a7d7c]" />
-        </button>
+    <div className="min-h-screen bg-gradient-to-b from-purple-100 via-blue-50 to-white p-4 md:p-8 relative overflow-hidden">
+      {/* Glassmorphic background elements */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="absolute -top-64 -right-64 w-[500px] h-[500px] rounded-full bg-purple-300/20 blur-3xl"></div>
+        <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] rounded-full bg-blue-300/20 blur-3xl"></div>
+        <div className="absolute -bottom-64 -left-64 w-[500px] h-[500px] rounded-full bg-green-300/20 blur-3xl"></div>
       </div>
-
-      {/* Search Bar */}
-      <div className="p-4">
-        <div className="relative">
-          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
-          </div>
-          <input
-            type="text"
-            placeholder="Search for help..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border-none shadow-[5px_5px_10px_rgba(0,0,0,0.05),-5px_-5px_10px_rgba(255,255,255,0.8)] focus:outline-none focus:ring-2 focus:ring-[#5a7d7c] focus:ring-opacity-50"
-          />
-        </div>
-      </div>
-
-      {/* Categories */}
-      <div className="px-4 mb-4">
-        <div className="flex flex-wrap gap-2">
-          {categories.map((category) => (
-            <button
-              key={category}
-              onClick={() => handleCategorySelect(category)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                activeCategory === category
-                  ? 'bg-[#5a7d7c] text-white shadow-[3px_3px_6px_rgba(0,0,0,0.1)]'
-                  : 'bg-white text-[#5a7d7c] shadow-[5px_5px_10px_rgba(0,0,0,0.05),-5px_-5px_10px_rgba(255,255,255,0.8)]'
-              }`}
+      
+      <div className="max-w-4xl mx-auto relative z-10">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => navigate(-1)} 
+              className="rounded-full hover:bg-purple-100/50 bg-white/30 backdrop-blur-sm border border-white/40 h-10 w-10 flex items-center justify-center"
             >
-              {category}
+              <ArrowLeft className="h-5 w-5 text-purple-700" />
             </button>
-          ))}
-        </div>
-      </div>
-
-      {/* FAQ Items */}
-      <div className="flex-1 px-4 pb-6">
-        {filteredFAQs.length > 0 ? (
-          filteredFAQs.map((item, index) => (
-            <div 
-              key={index} 
-              className="mb-4 rounded-xl bg-white shadow-[5px_5px_10px_rgba(0,0,0,0.05),-5px_-5px_10px_rgba(255,255,255,0.8)] overflow-hidden transition-all duration-300"
-            >
-              <div 
-                className="p-4 flex justify-between items-center cursor-pointer"
-                onClick={() => toggleExpand(index)}
-              >
-                <h3 className="font-medium text-[#5a7d7c]">{item.question}</h3>
-                {expandedIndex === index ? (
-                  <ChevronUp className="h-5 w-5 text-[#5a7d7c]" />
-                ) : (
-                  <ChevronDown className="h-5 w-5 text-[#5a7d7c]" />
-                )}
-              </div>
-              {expandedIndex === index && (
-                <div className="px-4 pb-4 text-gray-600 border-t border-gray-100">
-                  <p className="mt-2">{item.answer}</p>
-                  <div className="mt-2 text-xs text-gray-400">
-                    Category: {item.category}
-                  </div>
-                </div>
-              )}
-            </div>
-          ))
-        ) : (
-          <div className="flex flex-col items-center justify-center h-40 text-gray-500">
-            <p>No results found</p>
-            <p className="text-sm mt-2">Try a different search term or category</p>
+            <h1 className="text-3xl font-bold text-purple-800 flex items-center gap-2 px-4 py-2 bg-white/30 backdrop-blur-sm rounded-full border border-white/40">
+              <HelpCircle className="h-6 w-6" />
+              Help Center
+            </h1>
           </div>
-        )}
-      </div>
+          <button 
+            onClick={() => navigate('/')} 
+            className="rounded-full hover:bg-purple-100/50 bg-white/30 backdrop-blur-sm border border-white/40 h-10 w-10 flex items-center justify-center"
+          >
+            <Home className="h-5 w-5 text-purple-700" />
+          </button>
+        </div>
 
-      {/* Contact Support Section */}
-      <div className="px-4 pb-20">
-        <div className="rounded-xl bg-white shadow-[5px_5px_10px_rgba(0,0,0,0.05),-5px_-5px_10px_rgba(255,255,255,0.8)] overflow-hidden">
-          <div className="p-4 bg-[#5a7d7c] text-white">
+        {/* Search Bar */}
+        <div className="mb-6">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-purple-500" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search for help..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/50 backdrop-blur-sm border border-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent shadow-lg"
+            />
+          </div>
+        </div>
+
+        {/* Categories */}
+        <div className="mb-6 overflow-x-auto pb-2">
+          <div className="flex gap-2">
+            {categoriesWithIcons.map((category) => (
+              <button
+                key={category.name}
+                onClick={() => handleCategorySelect(category.name)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
+                  activeCategory === category.name
+                    ? 'bg-purple-600/90 text-white shadow-lg'
+                    : 'bg-white/60 backdrop-blur-sm text-purple-800 border border-white/40 shadow-md hover:bg-white/80'
+                }`}
+              >
+                <span className={`${activeCategory === category.name ? 'text-white' : 'text-purple-600'}`}>
+                  {category.icon}
+                </span>
+                {category.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* FAQ Items */}
+        <div className="mb-8">
+          <AnimatePresence>
+            {filteredFAQs.length > 0 ? (
+              <div className="space-y-4">
+                {filteredFAQs.map((item, index) => (
+                  <motion.div 
+                    key={index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="bg-white/60 backdrop-blur-sm rounded-xl border border-white/40 shadow-lg overflow-hidden"
+                  >
+                    <div 
+                      className="p-4 flex justify-between items-center cursor-pointer"
+                      onClick={() => toggleExpand(index)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="bg-purple-100/70 p-2 rounded-full text-purple-600">
+                          {item.icon}
+                        </div>
+                        <h3 className="font-medium text-purple-800">{item.question}</h3>
+                      </div>
+                      <div className="bg-white/70 rounded-full p-1">
+                        {expandedIndex === index ? (
+                          <ChevronUp className="h-5 w-5 text-purple-600" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5 text-purple-600" />
+                        )}
+                      </div>
+                    </div>
+                    <AnimatePresence>
+                      {expandedIndex === index && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="px-4 pb-4 text-gray-700 border-t border-white/40 pt-3 bg-white/30">
+                            <p className="mb-2">{item.answer}</p>
+                            <div className="text-xs text-purple-600 bg-purple-50/50 px-2 py-1 rounded-full inline-block">
+                              {item.category}
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="bg-white/60 backdrop-blur-sm rounded-xl border border-white/40 shadow-lg p-8 text-center"
+              >
+                <div className="bg-purple-100/70 p-4 rounded-full inline-flex mb-4">
+                  <HelpCircle className="h-8 w-8 text-purple-600" />
+                </div>
+                <h3 className="text-lg font-medium text-purple-800 mb-2">No results found</h3>
+                <p className="text-gray-600">Try a different search term or category</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Contact Support Section */}
+        <div className="bg-white/60 backdrop-blur-sm rounded-xl border border-white/40 shadow-lg overflow-hidden">
+          <div className="p-4 bg-purple-600/90 text-white">
             <h2 className="text-lg font-medium">Still need help?</h2>
           </div>
           
-          {!showContactForm ? (
-            <div className="p-4">
-              <p className="text-gray-600 mb-4">
-                Can't find what you're looking for? Contact our support team.
-              </p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <button
-                  onClick={() => setShowContactForm(true)}
-                  className="flex items-center justify-center gap-2 p-3 rounded-lg bg-white text-[#5a7d7c] shadow-[5px_5px_10px_rgba(0,0,0,0.05),-5px_-5px_10px_rgba(255,255,255,0.8)] hover:shadow-[inset_2px_2px_5px_rgba(0,0,0,0.05),_inset_-2px_-2px_5px_rgba(255,255,255,0.8)] transition-all"
-                >
-                  <MessageSquare className="h-5 w-5" />
-                  <span>Contact Form</span>
-                </button>
+          <AnimatePresence mode="wait">
+            {!showContactForm ? (
+              <motion.div
+                key="contact-options"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="p-6"
+              >
+                <p className="text-gray-700 mb-6">
+                  Can't find what you're looking for? Contact our support team.
+                </p>
                 
-                <a
-                  href="mailto:support@wishone.app"
-                  className="flex items-center justify-center gap-2 p-3 rounded-lg bg-white text-[#5a7d7c] shadow-[5px_5px_10px_rgba(0,0,0,0.05),-5px_-5px_10px_rgba(255,255,255,0.8)] hover:shadow-[inset_2px_2px_5px_rgba(0,0,0,0.05),_inset_-2px_-2px_5px_rgba(255,255,255,0.8)] transition-all"
-                >
-                  <Mail className="h-5 w-5" />
-                  <span>Email Support</span>
-                </a>
-                
-                <a
-                  href="https://docs.wishone.app"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 p-3 rounded-lg bg-white text-[#5a7d7c] shadow-[5px_5px_10px_rgba(0,0,0,0.05),-5px_-5px_10px_rgba(255,255,255,0.8)] hover:shadow-[inset_2px_2px_5px_rgba(0,0,0,0.05),_inset_-2px_-2px_5px_rgba(255,255,255,0.8)] transition-all md:col-span-2"
-                >
-                  <ExternalLink className="h-5 w-5" />
-                  <span>Documentation</span>
-                </a>
-              </div>
-            </div>
-          ) : (
-            <div className="p-4">
-              {/* Form Status Messages */}
-              {formState.isSuccess && (
-                <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-lg flex items-center">
-                  <CheckCircle className="h-5 w-5 mr-2" />
-                  <span>Thank you! Your message has been sent successfully.</span>
-                </div>
-              )}
-              
-              {formState.isError && (
-                <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg flex items-center">
-                  <AlertCircle className="h-5 w-5 mr-2" />
-                  <span>{formState.errorMessage || 'There was an error sending your message. Please try again.'}</span>
-                </div>
-              )}
-              
-              <form onSubmit={handleContactSubmit}>
-                <div className="mb-4">
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={contactForm.name}
-                    onChange={handleContactInputChange}
-                    disabled={formState.isSubmitting || formState.isSuccess}
-                    className={`w-full p-3 rounded-lg bg-[#f0f4f1] border-none shadow-[inset_2px_2px_5px_rgba(0,0,0,0.05),_inset_-2px_-2px_5px_rgba(255,255,255,0.8)] focus:outline-none focus:ring-2 focus:ring-[#5a7d7c] focus:ring-opacity-50 ${
-                      formErrors.name ? 'ring-2 ring-red-500' : ''
-                    }`}
-                  />
-                  {formErrors.name && (
-                    <p className="mt-1 text-sm text-red-600">{formErrors.name}</p>
-                  )}
-                </div>
-                
-                <div className="mb-4">
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={contactForm.email}
-                    onChange={handleContactInputChange}
-                    disabled={formState.isSubmitting || formState.isSuccess}
-                    className={`w-full p-3 rounded-lg bg-[#f0f4f1] border-none shadow-[inset_2px_2px_5px_rgba(0,0,0,0.05),_inset_-2px_-2px_5px_rgba(255,255,255,0.8)] focus:outline-none focus:ring-2 focus:ring-[#5a7d7c] focus:ring-opacity-50 ${
-                      formErrors.email ? 'ring-2 ring-red-500' : ''
-                    }`}
-                  />
-                  {formErrors.email && (
-                    <p className="mt-1 text-sm text-red-600">{formErrors.email}</p>
-                  )}
-                </div>
-                
-                <div className="mb-4">
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-                    Message
-                  </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    value={contactForm.message}
-                    onChange={handleContactInputChange}
-                    disabled={formState.isSubmitting || formState.isSuccess}
-                    rows={4}
-                    className={`w-full p-3 rounded-lg bg-[#f0f4f1] border-none shadow-[inset_2px_2px_5px_rgba(0,0,0,0.05),_inset_-2px_-2px_5px_rgba(255,255,255,0.8)] focus:outline-none focus:ring-2 focus:ring-[#5a7d7c] focus:ring-opacity-50 ${
-                      formErrors.message ? 'ring-2 ring-red-500' : ''
-                    }`}
-                  />
-                  {formErrors.message && (
-                    <p className="mt-1 text-sm text-red-600">{formErrors.message}</p>
-                  )}
-                </div>
-                
-                <div className="flex gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <button
-                    type="button"
-                    onClick={() => {
-                      setShowContactForm(false);
-                      setFormErrors({ name: '', email: '', message: '' });
-                      setFormState({
-                        isSubmitting: false,
-                        isSuccess: false,
-                        isError: false,
-                        errorMessage: ''
-                      });
-                    }}
-                    disabled={formState.isSubmitting}
-                    className="flex-1 py-2 px-4 rounded-lg bg-gray-100 text-gray-700 shadow-[5px_5px_10px_rgba(0,0,0,0.05),-5px_-5px_10px_rgba(255,255,255,0.8)] hover:shadow-[inset_2px_2px_5px_rgba(0,0,0,0.05),_inset_-2px_-2px_5px_rgba(255,255,255,0.8)] transition-all disabled:opacity-50"
+                    onClick={() => setShowContactForm(true)}
+                    className="flex items-center justify-center gap-2 p-4 rounded-xl bg-white/70 text-purple-700 border border-white/40 shadow-md hover:bg-white/90 transition-all"
                   >
-                    Cancel
+                    <MessageCircle className="h-5 w-5" />
+                    <span>Contact Form</span>
                   </button>
-                  <button
-                    type="submit"
-                    disabled={formState.isSubmitting || formState.isSuccess}
-                    className="flex-1 py-2 px-4 rounded-lg bg-[#5a7d7c] text-white shadow-[3px_3px_6px_rgba(0,0,0,0.1)] hover:bg-[#4a6d6c] transition-all disabled:opacity-50 flex justify-center items-center"
+                  
+                  <a
+                    href="mailto:support@wishone.app"
+                    className="flex items-center justify-center gap-2 p-4 rounded-xl bg-white/70 text-purple-700 border border-white/40 shadow-md hover:bg-white/90 transition-all"
                   >
-                    {formState.isSubmitting ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Sending...
-                      </>
-                    ) : (
-                      'Send Message'
+                    <Mail className="h-5 w-5" />
+                    <span>Email Support</span>
+                  </a>
+                  
+                  <a
+                    href="https://docs.wishone.app"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 p-4 rounded-xl bg-white/70 text-purple-700 border border-white/40 shadow-md hover:bg-white/90 transition-all"
+                  >
+                    <ExternalLink className="h-5 w-5" />
+                    <span>Documentation</span>
+                  </a>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="contact-form"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="p-6"
+              >
+                {/* Form Status Messages */}
+                <AnimatePresence>
+                  {formState.isSuccess && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="mb-4 p-4 bg-green-100/70 text-green-700 rounded-xl flex items-center border border-green-200/70"
+                    >
+                      <CheckCircle className="h-5 w-5 mr-2" />
+                      <span>Thank you! Your message has been sent successfully.</span>
+                    </motion.div>
+                  )}
+                  
+                  {formState.isError && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="mb-4 p-4 bg-red-100/70 text-red-700 rounded-xl flex items-center border border-red-200/70"
+                    >
+                      <AlertCircle className="h-5 w-5 mr-2" />
+                      <span>{formState.errorMessage || 'There was an error sending your message. Please try again.'}</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                
+                <form onSubmit={handleContactSubmit} className="space-y-4">
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-purple-700 mb-1">
+                      Name
+                    </label>
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      value={contactForm.name}
+                      onChange={handleContactInputChange}
+                      disabled={formState.isSubmitting || formState.isSuccess}
+                      className={`w-full p-3 rounded-xl bg-white/50 backdrop-blur-sm border ${
+                        formErrors.name ? 'border-red-300 ring-2 ring-red-300' : 'border-white/40'
+                      } focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                      placeholder="Your name"
+                    />
+                    {formErrors.name && (
+                      <p className="mt-1 text-sm text-red-600">{formErrors.name}</p>
                     )}
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-purple-700 mb-1">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      value={contactForm.email}
+                      onChange={handleContactInputChange}
+                      disabled={formState.isSubmitting || formState.isSuccess}
+                      className={`w-full p-3 rounded-xl bg-white/50 backdrop-blur-sm border ${
+                        formErrors.email ? 'border-red-300 ring-2 ring-red-300' : 'border-white/40'
+                      } focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                      placeholder="your.email@example.com"
+                    />
+                    {formErrors.email && (
+                      <p className="mt-1 text-sm text-red-600">{formErrors.email}</p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="message" className="block text-sm font-medium text-purple-700 mb-1">
+                      Message
+                    </label>
+                    <textarea
+                      id="message"
+                      name="message"
+                      value={contactForm.message}
+                      onChange={handleContactInputChange}
+                      disabled={formState.isSubmitting || formState.isSuccess}
+                      rows={4}
+                      className={`w-full p-3 rounded-xl bg-white/50 backdrop-blur-sm border ${
+                        formErrors.message ? 'border-red-300 ring-2 ring-red-300' : 'border-white/40'
+                      } focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                      placeholder="How can we help you?"
+                    />
+                    {formErrors.message && (
+                      <p className="mt-1 text-sm text-red-600">{formErrors.message}</p>
+                    )}
+                  </div>
+                  
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowContactForm(false);
+                        setFormErrors({ name: '', email: '', message: '' });
+                        setFormState({
+                          isSubmitting: false,
+                          isSuccess: false,
+                          isError: false,
+                          errorMessage: ''
+                        });
+                      }}
+                      disabled={formState.isSubmitting}
+                      className="flex-1 py-2 px-4 rounded-xl bg-white/70 text-gray-700 border border-white/40 shadow-md hover:bg-white/90 transition-all disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={formState.isSubmitting || formState.isSuccess}
+                      className="flex-1 py-2 px-4 rounded-xl bg-purple-600/90 text-white shadow-md hover:bg-purple-700 transition-all disabled:opacity-50 flex justify-center items-center"
+                    >
+                      {formState.isSubmitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        'Send Message'
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>

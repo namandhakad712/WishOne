@@ -298,30 +298,39 @@ const ChatPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#e8eeeb] flex flex-col items-center justify-center pb-20">
-      <div className="w-full max-w-md px-4 py-4 flex-1 flex flex-col items-center justify-center">
-        {!apiKeyValid ? (
-          <ApiKeyMissing 
-            service="Gemini AI" 
-            envVarName="VITE_GEMINI_API_KEY" 
-          />
-        ) : (
-          <AIChatbot
-            messages={messages}
-            onSendMessage={handleSendMessage}
-            onUploadMedia={handleUploadMedia}
-            onReplyTo={handleReplyTo}
-            replyingTo={replyingTo ? messages.find(m => m.id === replyingTo) : undefined}
-          />
-        )}
+    <div className="min-h-screen bg-gradient-to-b from-purple-100 via-blue-50 to-white relative overflow-hidden">
+      {/* Glassmorphic background elements */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="absolute -top-64 -right-64 w-[500px] h-[500px] rounded-full bg-purple-300/20 blur-3xl"></div>
+        <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] rounded-full bg-blue-300/20 blur-3xl"></div>
+        <div className="absolute -bottom-64 -left-64 w-[500px] h-[500px] rounded-full bg-green-300/20 blur-3xl"></div>
       </div>
+      
+      <div className="relative z-10 flex flex-col items-center justify-center pb-20 px-4 pt-6">
+        <div className="w-full max-w-md flex-1 flex flex-col items-center justify-center">
+          {!apiKeyValid ? (
+            <ApiKeyMissing 
+              service="Gemini AI" 
+              envVarName="VITE_GEMINI_API_KEY" 
+            />
+          ) : (
+            <AIChatbot
+              messages={messages}
+              onSendMessage={handleSendMessage}
+              onUploadMedia={handleUploadMedia}
+              onReplyTo={handleReplyTo}
+              replyingTo={replyingTo ? messages.find(m => m.id === replyingTo) : undefined}
+            />
+          )}
+        </div>
 
-      <BottomTabBar
-        activeTab="chat"
-        onHomeClick={() => (window.location.href = "/")}
-        onChatClick={() => {}}
-        onProfileClick={() => (window.location.href = "/profile")}
-      />
+        <BottomTabBar
+          activeTab="chat"
+          onHomeClick={() => (window.location.href = "/")}
+          onChatClick={() => {}}
+          onProfileClick={() => (window.location.href = "/profile")}
+        />
+      </div>
     </div>
   );
 };

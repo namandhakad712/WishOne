@@ -141,10 +141,10 @@ export function ProfileEditForm({ open, onOpenChange }: ProfileEditFormProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] bg-white/70 backdrop-blur-sm border border-white/40 shadow-lg">
         <DialogHeader>
-          <DialogTitle>Edit Profile</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-purple-800">Edit Profile</DialogTitle>
+          <DialogDescription className="text-gray-600">
             Update your profile information here. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
@@ -152,12 +152,12 @@ export function ProfileEditForm({ open, onOpenChange }: ProfileEditFormProps) {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
           <div className="flex flex-col items-center justify-center mb-4">
             <div className="relative">
-              <Avatar className="h-24 w-24 border-2 border-gray-200">
+              <Avatar className="h-24 w-24 border-2 border-white/80 shadow-lg">
                 {avatarPreview ? (
                   <AvatarImage src={avatarPreview} alt="Profile preview" />
                 ) : (
-                  <AvatarFallback className="bg-primary-mint">
-                    <Camera className="h-10 w-10 text-primary-emerald" />
+                  <AvatarFallback className="bg-purple-100">
+                    <Camera className="h-10 w-10 text-purple-600" />
                   </AvatarFallback>
                 )}
               </Avatar>
@@ -187,6 +187,7 @@ export function ProfileEditForm({ open, onOpenChange }: ProfileEditFormProps) {
                 type="button" 
                 variant="outline" 
                 onClick={() => fileInputRef.current?.click()}
+                className="bg-white/80 border border-purple-200 text-purple-700 hover:bg-white/90"
               >
                 <Upload className="mr-2 h-4 w-4" />
                 {avatarPreview ? "Change Picture" : "Upload Picture"}
@@ -195,11 +196,12 @@ export function ProfileEditForm({ open, onOpenChange }: ProfileEditFormProps) {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="full_name">Full Name</Label>
+            <Label htmlFor="full_name" className="text-purple-800">Full Name</Label>
             <Input
               id="full_name"
               placeholder="Enter your full name"
               {...form.register("full_name")}
+              className="bg-white/50 border-white/40 focus-visible:ring-purple-500"
             />
             {form.formState.errors.full_name && (
               <p className="text-sm text-red-500">
@@ -209,10 +211,19 @@ export function ProfileEditForm({ open, onOpenChange }: ProfileEditFormProps) {
           </div>
           
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              className="bg-white/80 border border-purple-200 text-purple-700 hover:bg-white/90"
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button 
+              type="submit" 
+              disabled={isLoading}
+              className="bg-purple-600/90 hover:bg-purple-700 text-white"
+            >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Changes
             </Button>

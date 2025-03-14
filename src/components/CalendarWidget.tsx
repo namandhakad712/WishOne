@@ -194,8 +194,9 @@ const CalendarWidget = ({
       color: "#6b21a8",
       fontWeight: "bold",
       position: "relative" as const,
-      backgroundColor: "rgba(147, 51, 234, 0.1)",
-      borderRadius: "100%",
+      backgroundColor: "rgba(147, 51, 234, 0.2)",
+      borderRadius: "80%",
+      boxShadow: "0 0 0 2px rgba(147, 51, 234, 0.3)",
     },
   };
 
@@ -228,8 +229,12 @@ const CalendarWidget = ({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-[700px] h-[500px] flex flex-col">
-      <div className="flex justify-between items-center mb-4">
+    <div className="bg-white/30 backdrop-blur-md rounded-xl shadow-lg p-6 w-full max-w-[700px] h-auto flex flex-col border border-white/40 relative overflow-hidden">
+      {/* Glassmorphic background elements */}
+      <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-purple-300/20 blur-2xl"></div>
+      <div className="absolute -bottom-24 -left-24 w-96 h-96 rounded-full bg-green-300/20 blur-2xl"></div>
+      
+      <div className="flex justify-between items-center mb-4 relative z-10">
         <h2 className="text-2xl font-semibold text-purple-800">
           Birthday Calendar
         </h2>
@@ -238,44 +243,69 @@ const CalendarWidget = ({
             variant="outline"
             size="icon"
             onClick={handlePreviousMonth}
-            className="rounded-full hover:bg-purple-100"
+            className="rounded-full hover:bg-purple-100 border-white/40 bg-white/50 backdrop-blur-sm"
           >
             <ChevronLeft className="h-5 w-5 text-purple-600" />
           </Button>
-          <span className="text-lg font-medium text-gray-700 flex items-center">
+          <span className="text-lg font-medium text-gray-700 flex items-center px-3 py-1 bg-white/50 backdrop-blur-sm rounded-full border border-white/40">
             {format(currentMonth, "MMMM yyyy")}
           </span>
           <Button
             variant="outline"
             size="icon"
             onClick={handleNextMonth}
-            className="rounded-full hover:bg-purple-100"
+            className="rounded-full hover:bg-purple-100 border-white/40 bg-white/50 backdrop-blur-sm"
           >
             <ChevronRight className="h-5 w-5 text-purple-600" />
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 flex-grow">
-        <div className="md:col-span-3 bg-purple-50 rounded-xl p-2">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 flex-1 relative z-10">
+        <div className="md:col-span-3 bg-white/40 backdrop-blur-sm rounded-xl p-4 border border-white/40 shadow-sm">
           <Calendar
             mode="single"
             selected={selectedDate}
             onSelect={handleDateSelect}
             month={currentMonth}
-            className="border-none bg-purple-50"
+            className="border-none bg-transparent"
             classNames={{
-              day_selected:
-                "bg-purple-600 text-white hover:bg-purple-700 hover:text-white",
-              day_today: "bg-purple-200 text-purple-900",
+              months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+              month: "space-y-4",
+              caption: "flex justify-center pt-1 relative items-center",
+              caption_label: "text-sm font-medium text-purple-800",
+              nav: "space-x-1 flex items-center",
+              nav_button: "h-7 w-7 bg-white/50 backdrop-blur-sm border border-white/40 rounded-full p-0 opacity-80 hover:opacity-100 hover:bg-purple-100",
+              nav_button_previous: "absolute left-1",
+              nav_button_next: "absolute right-1",
+              table: "w-full border-collapse space-y-1",
+              head_row: "flex",
+              head_cell: "text-purple-800 rounded-md w-9 font-medium text-[0.8rem]",
+              row: "flex w-full mt-2",
+              cell: "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-purple-100/50 [&:has([aria-selected])]:backdrop-blur-sm [&:has([aria-selected])]:rounded-full",
+              day: "h-9 w-9 p-0 font-normal rounded-full hover:bg-purple-100/50 aria-selected:opacity-100 transition-all duration-200",
+              day_selected: "bg-purple-600/90 text-white hover:bg-purple-700 hover:text-white focus:bg-purple-600 focus:text-white",
+              day_today: "bg-purple-200/70 text-purple-900 font-semibold",
+              day_outside: "text-gray-400 opacity-50",
+              day_disabled: "text-gray-300 opacity-50",
+              day_hidden: "invisible",
             }}
             modifiers={modifiers}
-            modifiersStyles={modifiersStyles}
+            modifiersStyles={{
+              birthday: {
+                color: "#6b21a8",
+                fontWeight: "bold",
+                position: "relative" as const,
+                backgroundColor: "rgba(147, 51, 234, 0.2)",
+                borderRadius: "100%",
+                boxShadow: "0 0 0 2px rgba(147, 51, 234, 0.3)",
+              },
+            }}
           />
         </div>
 
         <div className="md:col-span-2">
-          <Card className="h-full border-purple-100 bg-purple-50">
+          <Card className="h-full border-white/40 bg-white/40 backdrop-blur-sm shadow-sm">
             <CardHeader>
               <CardTitle className="text-purple-800 flex justify-between items-center">
                 <span>Upcoming Birthdays</span>

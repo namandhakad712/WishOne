@@ -75,8 +75,12 @@ const BirthdayDetails = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white rounded-xl border-none shadow-lg max-w-md w-full">
-        <DialogHeader>
+      <DialogContent className="bg-white/80 backdrop-blur-md rounded-xl border border-white/40 shadow-lg max-w-md w-full relative overflow-hidden max-h-[90vh] overflow-y-auto fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+        {/* Glassmorphic background elements */}
+        <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-purple-300/20 blur-2xl"></div>
+        <div className="absolute -bottom-24 -left-24 w-64 h-64 rounded-full bg-green-300/20 blur-2xl"></div>
+        
+        <DialogHeader className="relative z-10">
           <DialogTitle className="text-2xl font-semibold text-purple-700">
             {birthdayData.name}
           </DialogTitle>
@@ -86,7 +90,7 @@ const BirthdayDetails = ({
           </div>
         </DialogHeader>
 
-        <div className="bg-purple-50 p-4 rounded-lg my-4">
+        <div className="bg-white/50 backdrop-blur-sm p-4 rounded-lg my-4 border border-white/40 shadow-sm relative z-10">
           <div className="flex justify-between items-center">
             <div>
               <p className="text-sm text-gray-600">Current Age</p>
@@ -101,8 +105,8 @@ const BirthdayDetails = ({
           </div>
         </div>
 
-        <div className="space-y-3">
-          <div className="flex items-center">
+        <div className="space-y-3 relative z-10">
+          <div className="flex items-center p-2 bg-white/40 backdrop-blur-sm rounded-lg border border-white/40">
             <span className="text-sm font-medium w-32 text-gray-600">
               Relation:
             </span>
@@ -110,7 +114,7 @@ const BirthdayDetails = ({
               {birthdayData.relation}
             </span>
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center p-2 bg-white/40 backdrop-blur-sm rounded-lg border border-white/40">
             <span className="text-sm font-medium w-32 text-gray-600">
               Reminder:
             </span>
@@ -118,7 +122,7 @@ const BirthdayDetails = ({
               {birthdayData.reminderDays} days before
             </span>
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center p-2 bg-white/40 backdrop-blur-sm rounded-lg border border-white/40">
             <span className="text-sm font-medium w-32 text-gray-600">
               Google Calendar:
             </span>
@@ -129,52 +133,52 @@ const BirthdayDetails = ({
           {birthdayData.notes && (
             <div className="mt-4">
               <span className="text-sm font-medium text-gray-600">Notes:</span>
-              <p className="text-sm text-gray-800 mt-1 p-3 bg-gray-50 rounded-md">
+              <p className="text-sm text-gray-800 mt-1 p-3 bg-white/40 backdrop-blur-sm rounded-lg border border-white/40">
                 {birthdayData.notes}
               </p>
             </div>
           )}
         </div>
 
-        <DialogFooter className="flex flex-row justify-between items-center gap-2 mt-6">
+        <DialogFooter className="flex flex-row justify-between items-center gap-2 mt-6 relative z-10">
           <div className="flex gap-2">
             <Button
               variant="outline"
               size="sm"
-              className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
-              onClick={handleDelete}
+              onClick={handleCall}
+              className="rounded-full bg-white/50 backdrop-blur-sm border-white/40 hover:bg-purple-100/50"
             >
-              <Trash2 className="h-4 w-4 mr-1" />
-              Delete
+              <Phone className="h-4 w-4 mr-2 text-purple-600" />
+              Call
             </Button>
             <Button
               variant="outline"
               size="sm"
-              className="border-purple-300 text-purple-600 hover:bg-purple-50 hover:text-purple-700"
-              onClick={handleEdit}
+              onClick={handleSendMessage}
+              className="rounded-full bg-white/50 backdrop-blur-sm border-white/40 hover:bg-purple-100/50"
             >
-              <Edit className="h-4 w-4 mr-1" />
-              Edit
+              <MessageSquare className="h-4 w-4 mr-2 text-purple-600" />
+              Message
             </Button>
           </div>
           <div className="flex gap-2">
             <Button
               variant="outline"
               size="sm"
-              className="border-green-300 text-green-600 hover:bg-green-50 hover:text-green-700"
-              onClick={handleSendMessage}
+              onClick={handleEdit}
+              className="rounded-full bg-white/50 backdrop-blur-sm border-white/40 hover:bg-purple-100/50"
             >
-              <MessageSquare className="h-4 w-4 mr-1" />
-              Message
+              <Edit className="h-4 w-4 mr-2 text-purple-600" />
+              Edit
             </Button>
             <Button
-              variant="default"
+              variant="outline"
               size="sm"
-              className="bg-purple-600 hover:bg-purple-700 text-white"
-              onClick={handleCall}
+              onClick={handleDelete}
+              className="rounded-full bg-white/50 backdrop-blur-sm border-white/40 hover:bg-red-100/50 text-red-600 border-red-200/40"
             >
-              <Phone className="h-4 w-4 mr-1" />
-              Call
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
             </Button>
           </div>
         </DialogFooter>

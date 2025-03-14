@@ -48,17 +48,45 @@ export const signUp = async (email: string, password: string) => {
       return { data, error };
     }
 
-    // Create user record in the users table
+    // Generate a random avatar from DiceBear lorelei-neutral style
+    let avatarUrl = '';
     if (data.user) {
+      // Use the user's ID as the seed for consistency, or generate a random seed
+      const seed = data.user.id || Math.random().toString(36).substring(2);
+      avatarUrl = `https://api.dicebear.com/7.x/lorelei-neutral/svg?seed=${seed}`;
+      
+      console.log("Generated avatar URL:", avatarUrl);
+      
+      // Update user metadata with the avatar URL
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: { avatar_url: avatarUrl }
+      });
+      
+      if (updateError) {
+        console.error("Error setting default avatar:", updateError);
+        console.error("Update error details:", JSON.stringify(updateError));
+      } else {
+        console.log("Default avatar set successfully:", avatarUrl);
+        
+        // Verify the update was successful by getting the user again
+        const { data: userData } = await supabase.auth.getUser();
+        console.log("Updated user metadata:", userData?.user?.user_metadata);
+      }
+
+      // Create user record in the users table
       const { error: insertError } = await supabase
         .from('users')
         .insert({
           id: data.user.id,
           email: data.user.email,
+          avatar_url: avatarUrl
         });
 
       if (insertError) {
         console.error("Error creating user record:", insertError);
+        console.error("Insert error details:", JSON.stringify(insertError));
+      } else {
+        console.log("User record created successfully in users table");
       }
     }
     

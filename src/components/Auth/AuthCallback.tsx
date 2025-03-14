@@ -33,16 +33,49 @@ export function AuthCallback() {
           
           // If user doesn't exist in the users table, create a record
           if (!userData) {
+            // Generate a random avatar from DiceBear lorelei-neutral style
+            const seed = data.session.user.id || Math.random().toString(36).substring(2);
+            const avatarUrl = `https://api.dicebear.com/7.x/lorelei-neutral/svg?seed=${seed}`;
+            
+            console.log("Generated avatar URL for OAuth user:", avatarUrl);
+            
+            // Check if user already has an avatar from OAuth provider
+            const existingAvatarUrl = data.session.user.user_metadata?.avatar_url;
+            console.log("Existing avatar from OAuth provider:", existingAvatarUrl);
+            
+            // Only set our random avatar if the user doesn't already have one from the OAuth provider
+            if (!existingAvatarUrl) {
+              // Update user metadata with the avatar URL
+              const { error: updateError } = await supabase.auth.updateUser({
+                data: { avatar_url: avatarUrl }
+              });
+              
+              if (updateError) {
+                console.error("Error setting default avatar:", updateError);
+                console.error("Update error details:", JSON.stringify(updateError));
+              } else {
+                console.log("Default avatar set successfully:", avatarUrl);
+                
+                // Verify the update was successful
+                const { data: updatedUser } = await supabase.auth.getUser();
+                console.log("Updated user metadata:", updatedUser?.user?.user_metadata);
+              }
+            }
+            
             const { error: insertError } = await supabase
               .from('users')
               .insert({
                 id: data.session.user.id,
                 email: data.session.user.email,
+                avatar_url: existingAvatarUrl || avatarUrl
                 // Add any other fields you want to initialize
               });
               
             if (insertError) {
               console.error('Error creating user record:', insertError);
+              console.error("Insert error details:", JSON.stringify(insertError));
+            } else {
+              console.log("User record created successfully in users table");
             }
           }
           
