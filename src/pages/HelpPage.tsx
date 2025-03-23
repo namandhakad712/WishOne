@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Search, ArrowLeft, Home, Mail, MessageCircle, ExternalLink, Loader2, CheckCircle, AlertCircle, HelpCircle, Settings, Calendar, User, Bell } from 'lucide-react';
+import { ChevronDown, ChevronUp, Search, ArrowLeft, Home, Mail, MessageCircle, ExternalLink, Loader2, CheckCircle, AlertCircle, HelpCircle, Settings, Calendar, User, Bell, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -25,9 +25,11 @@ const HelpPage: React.FC = () => {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [showContactForm, setShowContactForm] = useState(false);
+  const [contactType, setContactType] = useState<'support' | 'bug' | 'feature'>('support');
   const [contactForm, setContactForm] = useState({
-    name: 'App Developer',
+    name: '',
     email: 'codinggeneraltutorials@gmail.com',
+    title: '',
     message: ''
   });
   const [formState, setFormState] = useState<FormState>({
@@ -37,8 +39,9 @@ const HelpPage: React.FC = () => {
     errorMessage: ''
   });
   const [formErrors, setFormErrors] = useState({
-    name: 'App Developer',
-    email: 'codinggeneraltutorials@gmail.com',
+    name: '',
+    email: '',
+    title: '',
     message: ''
   });
 
@@ -139,6 +142,7 @@ const HelpPage: React.FC = () => {
     const errors = {
       name: '',
       email: '',
+      title: '',
       message: ''
     };
 
@@ -158,6 +162,12 @@ const HelpPage: React.FC = () => {
       isValid = false;
     } else if (!emailRegex.test(contactForm.email)) {
       errors.email = 'Please enter a valid email address';
+      isValid = false;
+    }
+
+    // Validate title
+    if (!contactForm.title.trim()) {
+      errors.title = 'Title is required';
       isValid = false;
     }
 
@@ -206,29 +216,40 @@ const HelpPage: React.FC = () => {
     setFormState(prev => ({ ...prev, isSubmitting: true }));
     
     try {
-      // Simulate API call with a delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Format the email submission with the proper subject line based on contact type
+      let subject = '';
+      switch(contactType) {
+        case 'bug':
+          subject = `Bug - ${contactForm.title}`;
+          break;
+        case 'feature':
+          subject = `Suggestion - ${contactForm.title}`;
+          break;
+        default:
+          subject = `WishOne Support - ${contactForm.title}`;
+      }
       
-      // In a real app, you would send this data to your backend
-      // Example API call:
-      /*
-      const response = await fetch('https://api.wishone.app/support', {
+      const formattedSubmission = {
+        ...contactForm,
+        subject
+      };
+      
+      // Send form data to the backend API
+      const response = await fetch('http://localhost:3001/api/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(contactForm),
+        body: JSON.stringify(formattedSubmission),
       });
       
       if (!response.ok) {
-        throw new Error('Failed to send message');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to send message');
       }
       
-      const data = await response.json();
-      */
-      
       // Log form data (for development)
-      console.log('Contact form submitted:', contactForm);
+      console.log('Contact form submitted:', formattedSubmission);
       
       // Set success state
       setFormState({
@@ -240,7 +261,7 @@ const HelpPage: React.FC = () => {
       
       // Reset form after 2 seconds
       setTimeout(() => {
-        setContactForm({ name: '', email: '', message: '' });
+        setContactForm({ name: '', email: 'codinggeneraltutorials@gmail.com', title: '', message: '' });
         setFormState(prev => ({ ...prev, isSuccess: false }));
         setShowContactForm(false);
       }, 2000);
@@ -416,30 +437,51 @@ const HelpPage: React.FC = () => {
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <button
-                    onClick={() => setShowContactForm(true)}
+                    onClick={() => {
+                      setContactType('support');
+                      setShowContactForm(true);
+                    }}
                     className="flex items-center justify-center gap-2 p-4 rounded-xl bg-white/70 text-purple-700 border border-white/40 shadow-md hover:bg-white/90 transition-all"
                   >
                     <MessageCircle className="h-5 w-5" />
-                    <span>Contact Form</span>
+                    <span>App Support</span>
                   </button>
                   
-                  <a
-                    href="mailto:support@wishone.app"
+                  <button
+                    onClick={() => {
+                      setContactType('bug');
+                      setShowContactForm(true);
+                    }}
                     className="flex items-center justify-center gap-2 p-4 rounded-xl bg-white/70 text-purple-700 border border-white/40 shadow-md hover:bg-white/90 transition-all"
                   >
-                    <Mail className="h-5 w-5" />
-                    <span>Email Support</span>
-                  </a>
+                    <AlertCircle className="h-5 w-5" />
+                    <span>Report Bug</span>
+                  </button>
                   
-                  <a
-                    href="https://docs.wishone.app"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    onClick={() => {
+                      setContactType('feature');
+                      setShowContactForm(true);
+                    }}
                     className="flex items-center justify-center gap-2 p-4 rounded-xl bg-white/70 text-purple-700 border border-white/40 shadow-md hover:bg-white/90 transition-all"
                   >
-                    <ExternalLink className="h-5 w-5" />
-                    <span>Documentation</span>
-                  </a>
+                    <HelpCircle className="h-5 w-5" />
+                    <span>Feature Suggestion</span>
+                  </button>
+                </div>
+                
+                {/* Restart App Button */}
+                <div className="mt-6">
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-blue-100/70 text-blue-700 border border-blue-200/40 shadow-md hover:bg-blue-100/90 transition-all"
+                  >
+                    <RefreshCw className="h-5 w-5" />
+                    <span>Restart App</span>
+                  </button>
+                  <p className="text-xs text-center mt-2 text-gray-600">
+                    Having trouble? Try restarting the app to refresh all components and connections.
+                  </p>
                 </div>
               </motion.div>
             ) : (
@@ -480,7 +522,7 @@ const HelpPage: React.FC = () => {
                 <form onSubmit={handleContactSubmit} className="space-y-4">
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium text-purple-700 mb-1">
-                      Name
+                      Your Name
                     </label>
                     <input
                       type="text"
@@ -499,24 +541,31 @@ const HelpPage: React.FC = () => {
                     )}
                   </div>
                   
+                  <input
+                    type="hidden"
+                    id="email"
+                    name="email"
+                    value="codinggeneraltutorials@gmail.com"
+                  />
+                  
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-purple-700 mb-1">
-                      Email
+                    <label htmlFor="title" className="block text-sm font-medium text-purple-700 mb-1">
+                      Title
                     </label>
                     <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={contactForm.email}
+                      type="text"
+                      id="title"
+                      name="title"
+                      value={contactForm.title}
                       onChange={handleContactInputChange}
                       disabled={formState.isSubmitting || formState.isSuccess}
                       className={`w-full p-3 rounded-xl bg-white/50 backdrop-blur-sm border ${
-                        formErrors.email ? 'border-red-300 ring-2 ring-red-300' : 'border-white/40'
+                        formErrors.title ? 'border-red-300 ring-2 ring-red-300' : 'border-white/40'
                       } focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
-                      placeholder="your.email@example.com"
+                      placeholder="Brief description of your inquiry"
                     />
-                    {formErrors.email && (
-                      <p className="mt-1 text-sm text-red-600">{formErrors.email}</p>
+                    {formErrors.title && (
+                      <p className="mt-1 text-sm text-red-600">{formErrors.title}</p>
                     )}
                   </div>
                   
@@ -546,7 +595,7 @@ const HelpPage: React.FC = () => {
                       type="button"
                       onClick={() => {
                         setShowContactForm(false);
-                        setFormErrors({ name: '', email: '', message: '' });
+                        setFormErrors({ name: '', email: '', title: '', message: '' });
                         setFormState({
                           isSubmitting: false,
                           isSuccess: false,
@@ -578,6 +627,34 @@ const HelpPage: React.FC = () => {
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
+
+        {/* Footer Links */}
+        <div className="mt-6 text-center text-sm text-gray-600">
+          <div className="flex justify-center items-center gap-4 mb-2">
+            <a 
+              href="/privacy" 
+              className="text-purple-600 hover:text-purple-800 hover:underline transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                navigate('/privacy');
+              }}
+            >
+              Privacy Policy
+            </a>
+            <span className="text-gray-400">•</span>
+            <a 
+              href="/terms" 
+              className="text-purple-600 hover:text-purple-800 hover:underline transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                navigate('/terms');
+              }}
+            >
+              Terms & Conditions
+            </a>
+          </div>
+          <p>© {new Date().getFullYear()} WishOne. All rights reserved.</p>
         </div>
       </div>
     </div>

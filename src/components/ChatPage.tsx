@@ -18,7 +18,11 @@ interface Message {
   content: string;
   sender: "user" | "ai";
   timestamp: Date;
-  replyTo?: string; // ID of the message being replied to
+  replyTo?: string;
+  status: "sent" | "delivered" | "read";
+  isEditing?: boolean;
+  editedAt?: Date;
+  personality?: "formal" | "casual" | "friendly" | "professional";
 }
 
 const ChatPage = () => {
@@ -29,11 +33,15 @@ const ChatPage = () => {
         "Hi there! I'm your WishOne companion. I'm here to chat, help with birthdays, or just be a friendly presence. How are you feeling today?",
       sender: "ai",
       timestamp: new Date(),
+      status: "read",
+      personality: "friendly",
     },
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [apiKeyValid, setApiKeyValid] = useState(isValidApiKey(apiKey));
+  const [currentPersonality, setCurrentPersonality] = useState<"formal" | "casual" | "friendly" | "professional">("friendly");
+  const [messageContext, setMessageContext] = useState<string[]>([]);
   
   // Check for birthdays on component mount
   useEffect(() => {
@@ -42,6 +50,26 @@ const ChatPage = () => {
     // Validate API key on mount
     setApiKeyValid(isValidApiKey(apiKey));
   }, []);
+  
+  // Clear all chat history except the initial greeting
+  const clearChatHistory = () => {
+    setMessages([{
+      id: "1",
+      content:
+        "Hi there! I'm your WishOne companion. I'm here to chat, help with birthdays, or just be a friendly presence. How are you feeling today?",
+      sender: "ai",
+      timestamp: new Date(),
+      status: "read",
+      personality: "friendly",
+    }]);
+    setMessageContext([]);
+  };
+
+  // Update context when messages change
+  useEffect(() => {
+    const lastMessages = messages.slice(-5).map(m => m.content);
+    setMessageContext(lastMessages);
+  }, [messages]);
   
   const checkBirthdays = async () => {
     // Mock function to check birthdays - in a real app, this would query your database
@@ -60,9 +88,26 @@ const ChatPage = () => {
         content: `I just remembered something special! Today is ${birthdayNames}'s birthday! Would you like me to help you write a heartfelt wish?`,
         sender: "ai",
         timestamp: new Date(),
+        status: "read",
+        personality: "friendly",
       };
       
       setMessages(prev => [...prev, birthdayMessage]);
+    }
+  };
+
+  const getPersonalityPrompt = (personality: string) => {
+    switch (personality) {
+      case "formal":
+        return "Respond in a formal and professional manner, using proper language and maintaining a respectful tone.";
+      case "casual":
+        return "Respond in a casual and relaxed manner, using everyday language and a friendly tone.";
+      case "friendly":
+        return "Respond in a warm and empathetic manner, showing genuine care and understanding.";
+      case "professional":
+        return "Respond in a business-like manner, focusing on efficiency and clarity while maintaining professionalism.";
+      default:
+        return "";
     }
   };
 
@@ -74,37 +119,38 @@ const ChatPage = () => {
       sender: "user",
       timestamp: new Date(),
       replyTo: replyToId || replyingTo || undefined,
+      status: "sent",
     };
     
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setIsLoading(true);
-    setReplyingTo(null); // Clear reply state after sending
+    setReplyingTo(null);
     
     try {
-      // Check if message is about birthdays or wishes
+      // Build context-aware prompt
+      const contextPrompt = messageContext.length > 0
+        ? `Previous context:\n${messageContext.join("\n")}\n\n`
+        : "";
+      
+      const personalityPrompt = getPersonalityPrompt(currentPersonality);
+      
+      // Detect message intent
       const isBirthdayRelated = message.toLowerCase().includes("birthday") || 
                                message.toLowerCase().includes("wish");
       
-      // Check if user is asking to generate a birthday wish
       const isWishRequest = message.toLowerCase().includes("write a wish") || 
                            message.toLowerCase().includes("create a wish") ||
-                           message.toLowerCase().includes("birthday message") ||
-                           (message.toLowerCase().includes("wish") && message.toLowerCase().includes("for"));
+                           message.toLowerCase().includes("birthday message");
       
-      // Detect emotional content or questions about feelings
       const isEmotionalContent = message.toLowerCase().includes("feel") || 
                                 message.toLowerCase().includes("sad") ||
-                                message.toLowerCase().includes("happy") ||
-                                message.toLowerCase().includes("angry") ||
-                                message.toLowerCase().includes("love") ||
-                                message.toLowerCase().includes("miss");
-      
+                                message.toLowerCase().includes("happy");
+
       if (isWishRequest) {
-        // Extract name and relation from the message if possible
+        // Handle birthday wish generation
         let name = "friend";
         let relation = "friend";
         
-        // Simple extraction logic - can be improved
         if (message.toLowerCase().includes("for my")) {
           const parts = message.split("for my");
           if (parts.length > 1) {
@@ -119,83 +165,72 @@ const ChatPage = () => {
           }
         }
         
-        // Generate the birthday wish
         const wish = await generateBirthdayWish(name, relation);
         
-        // Add AI response to the chat
         const aiMessage: Message = {
           id: (Date.now() + 1).toString(),
           content: wish,
           sender: "ai",
           timestamp: new Date(),
+          status: "read",
+          personality: currentPersonality,
         };
         
         setMessages((prevMessages) => [...prevMessages, aiMessage]);
       } else {
-        // Generate regular AI response using Gemini API
-        let prompt = `User message: ${message}`;
+        // Generate context-aware AI response
+        let prompt = `${contextPrompt}${personalityPrompt}\n\nUser message: ${message}`;
         
-        // Add context about what message is being replied to
-        if (replyToId || replyingTo) {
-          const repliedMessage = messages.find(m => m.id === (replyToId || replyingTo));
-          if (repliedMessage) {
-            prompt += `\nThis message is replying to: "${repliedMessage.content}"`;
-          }
-        }
-        
-        // Add special instructions for birthday-related queries
+        // Add special instructions based on content type
         if (isBirthdayRelated) {
-          prompt += "\nThis message is about birthdays or wishes. Respond with enthusiasm and offer to help write a personalized birthday message.";
+          prompt = prompt + "\nThis message is about birthdays or wishes. Respond with enthusiasm and offer to help write a personalized birthday message.";
         }
         
-        // Add special instructions for emotional content
         if (isEmotionalContent) {
-          prompt += "\nThis message contains emotional content. Respond with empathy, validation, and emotional intelligence.";
+          prompt = prompt + "\nThis message contains emotional content. Respond with empathy, validation, and emotional intelligence.";
         }
         
         const response = await generateResponse(prompt);
         
-        // Add AI response to the chat
         const aiMessage: Message = {
           id: (Date.now() + 1).toString(),
           content: response,
           sender: "ai",
           timestamp: new Date(),
+          status: "read",
+          personality: currentPersonality,
         };
         
         setMessages((prevMessages) => [...prevMessages, aiMessage]);
       }
+      
+      // Update message status
+      setTimeout(() => {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === userMessage.id ? { ...msg, status: "delivered" } : msg
+          )
+        );
+      }, 1000);
+
+      setTimeout(() => {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === userMessage.id ? { ...msg, status: "read" } : msg
+          )
+        );
+      }, 2000);
     } catch (error) {
       console.error("Error generating response:", error);
       
-      // Add error message with emotional tone
-      let errorMessage: Message;
-      
-      if (error instanceof Error) {
-        let errorContent = "I'm feeling a bit disconnected right now. Can we try again in a moment?";
-        
-        if (error.message.includes("API key")) {
-          errorContent = "I'm having trouble connecting to my thoughts right now. There might be an issue with my connection to the AI service.";
-        } else if (error.message.includes("network") || error.message.includes("timeout")) {
-          errorContent = "I'm feeling a bit disconnected right now. Could we try again when the connection is better?";
-        } else if (error.message.includes("rate limit") || error.message.includes("quota")) {
-          errorContent = "I've been thinking a lot today and need a short break to recharge. Could we try again in a few minutes?";
-        }
-        
-        errorMessage = {
-          id: (Date.now() + 1).toString(),
-          content: errorContent,
-          sender: "ai",
-          timestamp: new Date(),
-        };
-      } else {
-        errorMessage = {
-          id: (Date.now() + 1).toString(),
-          content: "I'm feeling a bit disconnected right now. Can we try again in a moment?",
-          sender: "ai",
-          timestamp: new Date(),
-        };
-      }
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: "I'm feeling a bit disconnected right now. Can we try again in a moment?",
+        sender: "ai",
+        timestamp: new Date(),
+        status: "read",
+        personality: currentPersonality,
+      };
       
       setMessages((prevMessages) => [...prevMessages, errorMessage]);
     } finally {
@@ -220,6 +255,8 @@ const ChatPage = () => {
         content: "[Image shared]",
         sender: "user",
         timestamp: new Date(),
+        status: "read",
+        personality: "friendly",
       };
       
       setMessages((prevMessages) => [...prevMessages, userMessage]);
@@ -231,6 +268,8 @@ const ChatPage = () => {
         content: "I'm looking at your image with interest...",
         sender: "ai",
         timestamp: new Date(),
+        status: "read",
+        personality: "friendly",
       };
       
       setMessages((prevMessages) => [...prevMessages, processingMessage]);
@@ -269,6 +308,8 @@ const ChatPage = () => {
           content: errorContent,
           sender: "ai",
           timestamp: new Date(),
+          status: "read",
+          personality: "friendly",
         };
       } else {
         errorMessage = {
@@ -276,6 +317,8 @@ const ChatPage = () => {
           content: "I wish I could see what you're sharing. My vision seems a bit cloudy right now.",
           sender: "ai",
           timestamp: new Date(),
+          status: "read",
+          personality: "friendly",
         };
       }
       
@@ -295,6 +338,22 @@ const ChatPage = () => {
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
+  };
+
+  const handlePersonalityChange = (personality: "formal" | "casual" | "friendly" | "professional") => {
+    setCurrentPersonality(personality);
+    
+    // Add a message indicating the personality change
+    const systemMessage: Message = {
+      id: Date.now().toString(),
+      content: `I'll now respond in a ${personality} manner.`,
+      sender: "ai",
+      timestamp: new Date(),
+      status: "read",
+      personality,
+    };
+    
+    setMessages((prev) => [...prev, systemMessage]);
   };
 
   return (
@@ -320,6 +379,9 @@ const ChatPage = () => {
               onUploadMedia={handleUploadMedia}
               onReplyTo={handleReplyTo}
               replyingTo={replyingTo ? messages.find(m => m.id === replyingTo) : undefined}
+              onPersonalityChange={handlePersonalityChange}
+              currentPersonality={currentPersonality}
+              onClearHistory={clearChatHistory}
             />
           )}
         </div>

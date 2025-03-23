@@ -15,6 +15,9 @@ import ConnectionStatus from "./components/ConnectionStatus";
 import routes from "tempo-routes";
 import { AuthCallback } from "./components/Auth/AuthCallback";
 import { CalendarCallback } from "./components/Calendar/CalendarCallback";
+import { RetroModeProvider } from "@/contexts/RetroModeContext";
+import TermsConditionsPage from "./pages/TermsConditionsPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 
 function App() {
   const [showWelcome, setShowWelcome] = useState(false);
@@ -38,32 +41,36 @@ function App() {
   };
 
   return (
-    <Suspense fallback={<p>Loading...</p>}>
-      <>
-        {showWelcome && <WelcomeWindow onClose={handleCloseWelcome} />}
-        <UserSynchronizer />
-        <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<HomeScreen />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/help" element={<HelpPage />} />
-          <Route path="/auth/callback" element={<AuthCallback />} />
-          
-          {/* Protected routes */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/chat" element={<ChatPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/dashboard" element={<HomeScreen />} />
-            <Route path="/calendar" element={<CalendarPage />} />
-            <Route path="/calendar/callback" element={<CalendarCallback />} />
-          </Route>
-        </Routes>
-        {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
-        <Toaster />
-        {/* Only show connection status in development */}
-        {import.meta.env.DEV && <ConnectionStatus />}
-      </>
-    </Suspense>
+    <RetroModeProvider>
+      <Suspense fallback={<p>Loading...</p>}>
+        <>
+          {showWelcome && <WelcomeWindow onClose={handleCloseWelcome} />}
+          <UserSynchronizer />
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<HomeScreen />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/help" element={<HelpPage />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/terms" element={<TermsConditionsPage />} />
+            <Route path="/privacy" element={<PrivacyPolicyPage />} />
+            
+            {/* Protected routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/chat" element={<ChatPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/dashboard" element={<HomeScreen />} />
+              <Route path="/calendar" element={<CalendarPage />} />
+              <Route path="/calendar/callback" element={<CalendarCallback />} />
+            </Route>
+          </Routes>
+          {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
+          <Toaster />
+          {/* Only show connection status in development */}
+          {import.meta.env.DEV && <ConnectionStatus />}
+        </>
+      </Suspense>
+    </RetroModeProvider>
   );
 }
 

@@ -117,3 +117,42 @@ export default {
 - Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
 - Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
 - Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+
+# WishOne App
+
+## Contact Form Email Setup
+
+This application includes a contact form on the Help page that sends emails using Gmail SMTP.
+
+### Setting Up the Email Server
+
+1. Install the required dependencies:
+   ```
+   npm install
+   ```
+
+2. Start the email server:
+   ```
+   npm run server
+   ```
+   This will start the server on port 3001.
+
+3. Start the application:
+   ```
+   npm run dev
+   ```
+
+4. The contact form on the Help page will now send emails to your Gmail account.
+
+### How It Works
+
+- When users fill out the contact form on the Help page, the form data is sent to the API endpoint.
+- The server uses Nodemailer with Gmail SMTP to send an email to your address.
+- Different contact types (App Support, Bug Report, Feature Suggestion) have different subject line formats for easy categorization.
+- All emails are sent to `codinggeneraltutorials@gmail.com`.
+
+### Troubleshooting
+
+- If you're having issues with authentication, make sure your Gmail account has 2-factor authentication enabled and you're using an app password.
+- Check the server console for error messages if emails aren't being sent.
+- The server must be running on port 3001 for the form to work correctly.

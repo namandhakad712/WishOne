@@ -12,10 +12,11 @@ import {
 import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { Bell, Calendar, Moon, User, Shield, Loader2, Palette } from "lucide-react";
+import { Bell, Calendar, Moon, User, Shield, Loader2, Palette, Snowflake, HelpCircle } from "lucide-react";
 import { saveUserSettings, getUserSettings } from "@/lib/supabaseClient";
 import { useSupabase } from "@/contexts/SupabaseContext";
 import { useToast } from "@/components/ui/use-toast";
+import { useRetroMode } from "@/contexts/RetroModeContext";
 import gradientData from "@/lib/gradients.json";
 
 interface SettingsDialogProps {
@@ -155,9 +156,9 @@ interface Settings {
   };
   appearance: {
     darkMode: boolean;
-    reduceMotion: boolean;
-    highContrast: boolean;
+    retroMode: boolean; // Add retro mode for black and white outlined UI
     backgroundGradient: string; // ID of the selected gradient
+    frostBg: boolean; // Add frost glass effect to background
   };
   calendar: {
     googleCalendar: boolean;
@@ -165,8 +166,6 @@ interface Settings {
     weekStart: string;
   };
   account: {
-    privacyMode: boolean;
-    dataCollection: boolean;
   };
 }
 
@@ -179,9 +178,9 @@ const defaultSettings: Settings = {
   },
   appearance: {
     darkMode: false,
-    reduceMotion: false,
-    highContrast: false,
+    retroMode: false, // Default to modern UI
     backgroundGradient: "mint-gold", // Default gradient
+    frostBg: false, // Default to no frost effect
   },
   calendar: {
     googleCalendar: false,
@@ -189,8 +188,6 @@ const defaultSettings: Settings = {
     weekStart: "monday",
   },
   account: {
-    privacyMode: false,
-    dataCollection: true,
   },
 };
 
@@ -201,6 +198,7 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useSupabase();
   const { toast } = useToast();
+  const { setIsRetroMode } = useRetroMode();
 
   // Load settings from Supabase or localStorage on component mount
   useEffect(() => {
@@ -210,6 +208,8 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
         const userSettings = await getUserSettings();
         if (userSettings) {
           setSettings(userSettings);
+          // Update retro mode when settings are loaded
+          setIsRetroMode(userSettings.appearance.retroMode || false);
         }
       } catch (error) {
         console.error("Error loading settings:", error);
@@ -217,7 +217,10 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
         const savedSettings = localStorage.getItem("wishone_settings");
         if (savedSettings) {
           try {
-            setSettings(JSON.parse(savedSettings));
+            const parsedSettings = JSON.parse(savedSettings);
+            setSettings(parsedSettings);
+            // Update retro mode from localStorage
+            setIsRetroMode(parsedSettings.appearance.retroMode || false);
           } catch (parseError) {
             console.error("Error parsing saved settings:", parseError);
           }
@@ -230,7 +233,7 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
     if (open) {
       loadSettings();
     }
-  }, [open]);
+  }, [open, setIsRetroMode]);
 
   // Update a specific setting
   const updateSetting = (
@@ -246,6 +249,11 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
       },
     }));
     setHasChanges(true);
+
+    // Update retro mode immediately when changed
+    if (category === "appearance" && setting === "retroMode") {
+      setIsRetroMode(value);
+    }
   };
 
   // Save settings to Supabase and localStorage
@@ -280,8 +288,8 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] bg-white rounded-xl">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[500px] max-h-[85vh] bg-white rounded-xl overflow-hidden flex flex-col">
+        <DialogHeader className="shrink-0">
           <DialogTitle className="text-2xl font-serif text-primary-emerald">
             Settings
           </DialogTitle>
@@ -296,314 +304,299 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
             <Loader2 className="h-8 w-8 animate-spin text-primary-emerald" />
           </div>
         ) : (
-          <>
-            <Tabs defaultValue="notifications" className="mt-4">
-              <TabsList className="grid grid-cols-4 mb-6">
+          <div className="flex flex-col flex-1 overflow-hidden">
+            <Tabs defaultValue="notifications" className="mt-2 flex flex-col h-full overflow-hidden">
+              <TabsList className="grid grid-cols-4 mb-4">
                 <TabsTrigger value="notifications" className="flex flex-col items-center py-2">
-                  <Bell className="h-5 w-5 mb-1" />
-                  <span className="text-xs">Notifications</span>
+                  <Bell className="h-4 w-4 mb-1 sm:h-5 sm:w-5" />
+                  <span className="text-[10px] sm:text-xs">Notifications</span>
                 </TabsTrigger>
                 <TabsTrigger value="appearance" className="flex flex-col items-center py-2">
-                  <Moon className="h-5 w-5 mb-1" />
-                  <span className="text-xs">Appearance</span>
+                  <Moon className="h-4 w-4 mb-1 sm:h-5 sm:w-5" />
+                  <span className="text-[10px] sm:text-xs">Appearance</span>
                 </TabsTrigger>
                 <TabsTrigger value="calendar" className="flex flex-col items-center py-2">
-                  <Calendar className="h-5 w-5 mb-1" />
-                  <span className="text-xs">Calendar</span>
+                  <Calendar className="h-4 w-4 mb-1 sm:h-5 sm:w-5" />
+                  <span className="text-[10px] sm:text-xs">Calendar</span>
                 </TabsTrigger>
                 <TabsTrigger value="account" className="flex flex-col items-center py-2">
-                  <User className="h-5 w-5 mb-1" />
-                  <span className="text-xs">Account</span>
+                  <User className="h-4 w-4 mb-1 sm:h-5 sm:w-5" />
+                  <span className="text-[10px] sm:text-xs">Account</span>
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="notifications" className="space-y-4">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between space-x-2">
-                    <Label
-                      htmlFor="push-notifications"
-                      className="flex flex-col space-y-1"
-                    >
-                      <span>Push Notifications</span>
-                      <span className="font-normal text-xs text-gray-500">
-                        Receive notifications on your device
-                      </span>
-                    </Label>
-                    <Switch 
-                      id="push-notifications" 
-                      checked={settings.notifications.pushNotifications}
-                      onCheckedChange={(checked) => 
-                        updateSetting("notifications", "pushNotifications", checked)
-                      }
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between space-x-2">
-                    <Label
-                      htmlFor="email-notifications"
-                      className="flex flex-col space-y-1"
-                    >
-                      <span>Email Notifications</span>
-                      <span className="font-normal text-xs text-gray-500">
-                        Receive birthday reminders via email
-                      </span>
-                    </Label>
-                    <Switch 
-                      id="email-notifications" 
-                      checked={settings.notifications.emailNotifications}
-                      onCheckedChange={(checked) => 
-                        updateSetting("notifications", "emailNotifications", checked)
-                      }
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between space-x-2">
-                    <Label
-                      htmlFor="sound-notifications"
-                      className="flex flex-col space-y-1"
-                    >
-                      <span>Sound Notifications</span>
-                      <span className="font-normal text-xs text-gray-500">
-                        Play sounds for notifications
-                      </span>
-                    </Label>
-                    <Switch 
-                      id="sound-notifications" 
-                      checked={settings.notifications.soundNotifications}
-                      onCheckedChange={(checked) => 
-                        updateSetting("notifications", "soundNotifications", checked)
-                      }
-                    />
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="appearance" className="space-y-4">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between space-x-2">
-                    <Label
-                      htmlFor="dark-mode"
-                      className="flex flex-col space-y-1"
-                    >
-                      <span>Dark Mode</span>
-                      <span className="font-normal text-xs text-gray-500">
-                        Use dark theme for the app
-                      </span>
-                    </Label>
-                    <Switch 
-                      id="dark-mode" 
-                      checked={settings.appearance.darkMode}
-                      onCheckedChange={(checked) => 
-                        updateSetting("appearance", "darkMode", checked)
-                      }
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between space-x-2">
-                    <Label
-                      htmlFor="reduce-motion"
-                      className="flex flex-col space-y-1"
-                    >
-                      <span>Reduce Motion</span>
-                      <span className="font-normal text-xs text-gray-500">
-                        Minimize animations throughout the app
-                      </span>
-                    </Label>
-                    <Switch 
-                      id="reduce-motion" 
-                      checked={settings.appearance.reduceMotion}
-                      onCheckedChange={(checked) => 
-                        updateSetting("appearance", "reduceMotion", checked)
-                      }
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between space-x-2">
-                    <Label
-                      htmlFor="high-contrast"
-                      className="flex flex-col space-y-1"
-                    >
-                      <span>High Contrast</span>
-                      <span className="font-normal text-xs text-gray-500">
-                        Increase contrast for better visibility
-                      </span>
-                    </Label>
-                    <Switch 
-                      id="high-contrast" 
-                      checked={settings.appearance.highContrast}
-                      onCheckedChange={(checked) => 
-                        updateSetting("appearance", "highContrast", checked)
-                      }
-                    />
-                  </div>
-
-                  {/* Background Gradient Selection */}
-                  <div className="pt-4 border-t border-gray-100">
-                    <Label className="flex items-center space-x-2 mb-3">
-                      <Palette className="h-5 w-5 text-primary-emerald" />
-                      <span>Background Gradient</span>
-                    </Label>
-                    
-                    <div className="grid grid-cols-3 gap-3 mt-2">
-                      {gradientOptions.map((gradient) => {
-                        // Generate a random preview for the random option
-                        let previewStyle = gradient.preview;
-                        
-                        if (gradient.id === 'random') {
-                          // Show a random gradient from our JSON file
-                          const randomGradient = generateRandomGradient();
-                          previewStyle = `linear-gradient(135deg, rgb(${randomGradient[0]}) 0%, rgb(${randomGradient[1]}) 100%)`;
+              <div className="overflow-y-auto flex-1 pr-1 -mr-1">
+                {/* Notifications Tab */}
+                <TabsContent value="notifications" className="space-y-3 mt-0 data-[state=active]:flex flex-col">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between space-x-2">
+                      <Label
+                        htmlFor="push-notifications"
+                        className="flex flex-col space-y-1"
+                      >
+                        <span>Push Notifications</span>
+                        <span className="font-normal text-xs text-gray-500">
+                          Receive notifications on your device
+                        </span>
+                      </Label>
+                      <Switch 
+                        id="push-notifications" 
+                        checked={settings.notifications.pushNotifications}
+                        onCheckedChange={(checked) => 
+                          updateSetting("notifications", "pushNotifications", checked)
                         }
-                        
-                        return (
-                          <div 
-                            key={gradient.id}
-                            className={`
-                              cursor-pointer rounded-lg overflow-hidden border-2 transition-all
-                              ${settings.appearance.backgroundGradient === gradient.id 
-                                ? 'border-primary-emerald scale-105 shadow-md' 
-                                : 'border-transparent hover:border-gray-200'}
-                            `}
-                            onClick={() => updateSetting("appearance", "backgroundGradient", gradient.id)}
-                          >
-                            <div 
-                              className="h-16 w-full" 
-                              style={{ background: previewStyle }}
-                            />
-                            <div className="text-xs text-center py-1 px-1 truncate">
-                              {gradient.name}
-                            </div>
-                          </div>
-                        );
-                      })}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between space-x-2">
+                      <Label
+                        htmlFor="email-notifications"
+                        className="flex flex-col space-y-1"
+                      >
+                        <span>Email Notifications</span>
+                        <span className="font-normal text-xs text-gray-500">
+                          Receive birthday reminders via email
+                        </span>
+                      </Label>
+                      <Switch 
+                        id="email-notifications" 
+                        checked={settings.notifications.emailNotifications}
+                        onCheckedChange={(checked) => 
+                          updateSetting("notifications", "emailNotifications", checked)
+                        }
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between space-x-2">
+                      <Label
+                        htmlFor="sound-notifications"
+                        className="flex flex-col space-y-1"
+                      >
+                        <span>Sound Notifications</span>
+                        <span className="font-normal text-xs text-gray-500">
+                          Play sounds for notifications
+                        </span>
+                      </Label>
+                      <Switch 
+                        id="sound-notifications" 
+                        checked={settings.notifications.soundNotifications}
+                        onCheckedChange={(checked) => 
+                          updateSetting("notifications", "soundNotifications", checked)
+                        }
+                      />
                     </div>
                   </div>
-                </div>
-              </TabsContent>
+                </TabsContent>
 
-              <TabsContent value="calendar" className="space-y-4">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between space-x-2">
-                    <Label
-                      htmlFor="google-calendar"
-                      className="flex flex-col space-y-1"
-                    >
-                      <span>Google Calendar</span>
-                      <span className="font-normal text-xs text-gray-500">
-                        Sync birthdays with Google Calendar
-                      </span>
-                    </Label>
-                    <Switch 
-                      id="google-calendar" 
-                      checked={settings.calendar.googleCalendar}
-                      onCheckedChange={(checked) => 
-                        updateSetting("calendar", "googleCalendar", checked)
-                      }
-                    />
-                  </div>
+                {/* Appearance Tab */}
+                <TabsContent value="appearance" className="space-y-3 mt-0 data-[state=active]:flex flex-col">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between space-x-2">
+                      <Label
+                        htmlFor="dark-mode"
+                        className="flex flex-col space-y-1"
+                      >
+                        <span>Dark Mode</span>
+                        <span className="font-normal text-xs text-gray-500">
+                          Use dark theme for the app
+                        </span>
+                      </Label>
+                      <Switch 
+                        id="dark-mode" 
+                        checked={settings.appearance.darkMode}
+                        onCheckedChange={(checked) => 
+                          updateSetting("appearance", "darkMode", checked)
+                        }
+                      />
+                    </div>
 
-                  <div className="flex items-center justify-between space-x-2">
-                    <Label
-                      htmlFor="default-reminder"
-                      className="flex flex-col space-y-1"
-                    >
-                      <span>Default Reminder</span>
-                      <span className="font-normal text-xs text-gray-500">
-                        Set default reminder days before birthdays
-                      </span>
-                    </Label>
-                    <select 
-                      className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
-                      value={settings.calendar.defaultReminder}
-                      onChange={(e) => updateSetting("calendar", "defaultReminder", e.target.value)}
-                    >
-                      <option value="1">1 day before</option>
-                      <option value="3">3 days before</option>
-                      <option value="7">1 week before</option>
-                      <option value="14">2 weeks before</option>
-                      <option value="30">1 month before</option>
-                    </select>
-                  </div>
+                    <div className="flex items-center justify-between space-x-2">
+                      <Label
+                        htmlFor="retro-mode"
+                        className="flex flex-col space-y-1"
+                      >
+                        <span className="flex items-center">
+                          <svg className="h-4 w-4 mr-1 text-primary-emerald" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <line x1="3" y1="9" x2="21" y2="9" />
+                            <line x1="9" y1="21" x2="9" y2="9" />
+                          </svg>
+                          Retro Mode
+                        </span>
+                        <span className="font-normal text-xs text-gray-500">
+                          Black and white outlined interface
+                        </span>
+                      </Label>
+                      <Switch 
+                        id="retro-mode" 
+                        checked={settings.appearance.retroMode}
+                        onCheckedChange={(checked) => 
+                          updateSetting("appearance", "retroMode", checked)
+                        }
+                      />
+                    </div>
 
-                  <div className="flex items-center justify-between space-x-2">
-                    <Label
-                      htmlFor="week-start"
-                      className="flex flex-col space-y-1"
-                    >
-                      <span>Week Starts On</span>
-                      <span className="font-normal text-xs text-gray-500">
-                        Set the first day of the week
-                      </span>
-                    </Label>
-                    <select 
-                      className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
-                      value={settings.calendar.weekStart}
-                      onChange={(e) => updateSetting("calendar", "weekStart", e.target.value)}
-                    >
-                      <option value="sunday">Sunday</option>
-                      <option value="monday">Monday</option>
-                    </select>
-                  </div>
-                </div>
-              </TabsContent>
+                    <div className="flex items-center justify-between space-x-2">
+                      <Label
+                        htmlFor="frost-bg"
+                        className="flex flex-col space-y-1"
+                      >
+                        <span className="flex items-center">
+                          <Snowflake className="h-4 w-4 mr-1 text-primary-emerald" />
+                          Frost bg
+                        </span>
+                        <span className="font-normal text-xs text-gray-500">
+                          Add a frosted glass effect to the home screen
+                        </span>
+                      </Label>
+                      <Switch 
+                        id="frost-bg" 
+                        checked={settings.appearance.frostBg}
+                        onCheckedChange={(checked) => 
+                          updateSetting("appearance", "frostBg", checked)
+                        }
+                      />
+                    </div>
 
-              <TabsContent value="account" className="space-y-4">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between space-x-2">
-                    <Label htmlFor="privacy" className="flex flex-col space-y-1">
-                      <span>Privacy Mode</span>
-                      <span className="font-normal text-xs text-gray-500">
-                        Hide sensitive information
-                      </span>
-                    </Label>
-                    <Switch 
-                      id="privacy" 
-                      checked={settings.account.privacyMode}
-                      onCheckedChange={(checked) => 
-                        updateSetting("account", "privacyMode", checked)
-                      }
-                    />
+                    {/* Background Gradient Selection */}
+                    <div className="pt-3 border-t border-gray-100">
+                      <Label className="flex items-center space-x-2 mb-2">
+                        <Palette className="h-5 w-5 text-primary-emerald" />
+                        <span>Background Gradient</span>
+                      </Label>
+                      
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 mt-2">
+                        {gradientOptions.map((gradient) => {
+                          // Generate a random preview for the random option
+                          let previewStyle = gradient.preview;
+                          
+                          if (gradient.id === 'random') {
+                            // Show a random gradient from our JSON file
+                            const randomGradient = generateRandomGradient();
+                            previewStyle = `linear-gradient(135deg, rgb(${randomGradient[0]}) 0%, rgb(${randomGradient[1]}) 100%)`;
+                          }
+                          
+                          return (
+                            <div 
+                              key={gradient.id}
+                              className={`
+                                cursor-pointer rounded-lg overflow-hidden border-2 transition-all
+                                ${settings.appearance.backgroundGradient === gradient.id 
+                                  ? 'border-primary-emerald scale-105 shadow-md' 
+                                  : 'border-transparent hover:border-gray-200'}
+                              `}
+                              onClick={() => updateSetting("appearance", "backgroundGradient", gradient.id)}
+                            >
+                              <div 
+                                className="h-12 sm:h-16 w-full" 
+                                style={{ background: previewStyle }}
+                              />
+                              <div className="text-[10px] sm:text-xs text-center py-1 px-1 truncate">
+                                {gradient.name}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
+                </TabsContent>
 
-                  <div className="flex items-center justify-between space-x-2">
-                    <Label
-                      htmlFor="data-collection"
-                      className="flex flex-col space-y-1"
-                    >
-                      <span>Data Collection</span>
-                      <span className="font-normal text-xs text-gray-500">
-                        Allow anonymous usage data collection
-                      </span>
-                    </Label>
-                    <Switch 
-                      id="data-collection" 
-                      checked={settings.account.dataCollection}
-                      onCheckedChange={(checked) => 
-                        updateSetting("account", "dataCollection", checked)
-                      }
-                    />
-                  </div>
+                {/* Calendar Tab */}
+                <TabsContent value="calendar" className="space-y-3 mt-0 data-[state=active]:flex flex-col">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between space-x-2">
+                      <Label
+                        htmlFor="google-calendar"
+                        className="flex flex-col space-y-1"
+                      >
+                        <span>Google Calendar</span>
+                        <span className="font-normal text-xs text-gray-500">
+                          Sync birthdays with Google Calendar
+                        </span>
+                      </Label>
+                      <Switch 
+                        id="google-calendar" 
+                        checked={settings.calendar.googleCalendar}
+                        onCheckedChange={(checked) => 
+                          updateSetting("calendar", "googleCalendar", checked)
+                        }
+                      />
+                    </div>
 
-                  <div className="mt-6">
-                    <ButtonKwity variant="emerald" className="w-full">
-                      <Shield className="mr-2 h-4 w-4" />
-                      Privacy Settings
-                    </ButtonKwity>
-                  </div>
+                    <div className="flex items-center justify-between space-x-2">
+                      <Label
+                        htmlFor="default-reminder"
+                        className="flex flex-col space-y-1"
+                      >
+                        <span>Default Reminder</span>
+                        <span className="font-normal text-xs text-gray-500">
+                          Set default reminder days before birthdays
+                        </span>
+                      </Label>
+                      <select 
+                        className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+                        value={settings.calendar.defaultReminder}
+                        onChange={(e) => updateSetting("calendar", "defaultReminder", e.target.value)}
+                      >
+                        <option value="1">1 day before</option>
+                        <option value="3">3 days before</option>
+                        <option value="7">1 week before</option>
+                        <option value="14">2 weeks before</option>
+                        <option value="30">1 month before</option>
+                      </select>
+                    </div>
 
-                  <div className="mt-2">
-                    <Button
-                      variant="outline"
-                      className="w-full text-red-500 hover:text-red-600 hover:bg-red-50 border-red-100"
-                    >
-                      Sign Out
-                    </Button>
+                    <div className="flex items-center justify-between space-x-2">
+                      <Label
+                        htmlFor="week-start"
+                        className="flex flex-col space-y-1"
+                      >
+                        <span>Week Starts On</span>
+                        <span className="font-normal text-xs text-gray-500">
+                          Set the first day of the week
+                        </span>
+                      </Label>
+                      <select 
+                        className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+                        value={settings.calendar.weekStart}
+                        onChange={(e) => updateSetting("calendar", "weekStart", e.target.value)}
+                      >
+                        <option value="sunday">Sunday</option>
+                        <option value="monday">Monday</option>
+                      </select>
+                    </div>
                   </div>
-                </div>
-              </TabsContent>
+                </TabsContent>
+
+                {/* Account Tab */}
+                <TabsContent value="account" className="space-y-3 mt-0 data-[state=active]:flex flex-col">
+                  <div className="space-y-3">
+                    <div className="mt-4">
+                      <ButtonKwity 
+                        variant="emerald" 
+                        className="w-full"
+                        onClick={() => window.open('/help', '_blank')}
+                      >
+                        <HelpCircle className="mr-2 h-4 w-4" />
+                        Help Center
+                      </ButtonKwity>
+                    </div>
+
+                    <div className="mt-2">
+                      <Button
+                        variant="outline"
+                        className="w-full text-red-500 hover:text-red-600 hover:bg-red-50 border-red-100"
+                      >
+                        Sign Out
+                      </Button>
+                    </div>
+                  </div>
+                </TabsContent>
+              </div>
             </Tabs>
 
-            <DialogFooter className="mt-6">
+            <DialogFooter className="mt-4 shrink-0 border-t border-gray-100 pt-3">
               <Button
                 variant="outline"
                 onClick={() => onOpenChange(false)}
@@ -626,7 +619,7 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                 )}
               </ButtonKwity>
             </DialogFooter>
-          </>
+          </div>
         )}
       </DialogContent>
     </Dialog>

@@ -86,6 +86,102 @@
   }
 }
 
+/* Retro Mode Styles */
+.retro-mode {
+  filter: grayscale(100%);
+}
+
+.retro-mode body {
+  background: white;
+  color: black;
+}
+
+/* Interactive Elements */
+.retro-mode button,
+.retro-mode input,
+.retro-mode select,
+.retro-mode .button-primary,
+.retro-mode .button-secondary,
+.retro-mode .input-primary {
+  border: 1px solid black;
+  box-shadow: 2px 2px 0 black;
+  border-radius: 0;
+  background: white;
+  color: black;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.retro-mode button:hover,
+.retro-mode .button-primary:hover,
+.retro-mode .button-secondary:hover {
+  background: black;
+  color: white;
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+/* Cards and Containers */
+.retro-mode .card-primary,
+.retro-mode [class*="rounded"] {
+  border: 1px solid black;
+  border-radius: 0;
+  box-shadow: 4px 4px 0 black;
+  background: white;
+}
+
+/* Background and Text Colors */
+.retro-mode [class*="bg-"] {
+  background: white;
+}
+
+.retro-mode [class*="text-"] {
+  color: black;
+}
+
+/* Gradient Replacements */
+.retro-mode .bg-gradient-primary,
+.retro-mode .bg-gradient-secondary,
+.retro-mode [style*="background"] {
+  background: white;
+  position: relative;
+  border: 1px solid black;
+}
+
+.retro-mode .bg-gradient-primary::after,
+.retro-mode .bg-gradient-secondary::after,
+.retro-mode [style*="background"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(0, 0, 0, 0.05) 10px,
+    rgba(0, 0, 0, 0.05) 20px
+  );
+  pointer-events: none;
+}
+
+/* Text Gradients */
+.retro-mode .text-gradient,
+.retro-mode .text-gradient-purple {
+  background-image: none;
+  color: black;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+}
+
+/* Progress Bars */
+.retro-mode .progress-bar {
+  background: white;
+  border: 1px solid black;
+}
+
+.retro-mode .progress-bar-fill {
+  background: black;
+}
+
 /* Custom utility classes */
 .bg-gradient-primary {
   background: linear-gradient(135deg, #0f3c2d 0%, #1a5a43 100%);

@@ -1,0 +1,30 @@
+[33m4b3fbe2[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Remove foreign key constraint and simplify database schema
+[33mc4b5445[m Simplify database schema by removing unnecessary functions
+[33mcf546c5[m Fix Supabase authentication errors by updating database schema and auth callback
+[33me0a5660[m Fix 404 error by using React Router navigation instead of direct URL manipulation
+[33mdea7c65[m Latest SQL schema with fixed date handling and view security
+[33mc974c7a[m Enhance OAuth callback to immediately remove access_token hash and update Supabase Auth package
+[33m8d04ead[m Fix OAuth callback to remove access_token hash from URL
+[33m755101d[m Temporarily hardcode Supabase credentials for testing
+[33m1fe241b[m Fix TypeScript errors and update build script for Vercel deployment
+[33m9c0d162[m Fix Google sign-in authentication and improve error logging
+[33m22947ee[m Fix z-index issue with WelcomeWindow overlapping ExpandableMenu
+[33m532665b[m Update welcome screen with new Freepik welcome image
+[33me73c833[m Increase clickable area of Next button in welcome screen
+[33m6f876d3[m Update UI with glassmorphic design for login and signup pages
+[33m9dddeee[m Update login and signup pages with glassmorphic design
+[33m52893ae[m Fix Next button in WelcomeWindow and enhance glassmorphism effects
+[33m5a86cd4[m Update ExpandableMenu animation speed and fix avatar generation
+[33m11245ac[m feat: Enhanced calendar UI in birthday forms
+[33m4bebf0e[m fix: Remove test birthdays from CalendarWidget and CalendarPage
+[33m5534864[m feat: Enhanced upcoming birthdays display with monthly grouping and extended range
+[33mb2b27b7[m Update home screen with curved menu layout and improved styling
+[33mc9138f6[m Add new home screen with liquid gradient background, AI greeting, and expandable menu
+[33m6c17e9b[m fix: add connection retry logic and status component
+[33m8ae4205[m fix: implement RLS policies and user sync functions for birthdays table
+[33mfd5b056[m Your commit message
+[33m9eba38d[m Implement settings persistence using localStorage
+[33ma4b99d5[m Improve API key validation and remove duplicate Add Birthday button
+[33m121cbd4[m Update UI components and add WelcomeWindow
+[33m04ad6aa[m Update project with emotionally intelligent chatbot and enhanced features
+[33mb516de2[m[33m ([m[1;31morigin/master[m[33m)[m Initial commit
