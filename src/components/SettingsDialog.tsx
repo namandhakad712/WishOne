@@ -572,6 +572,14 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                 {/* Account Tab */}
                 <TabsContent value="account" className="space-y-3 mt-0 data-[state=active]:flex flex-col">
                   <div className="space-y-3">
+                    <div className="mb-4">
+                      <img 
+                        src="https://media.istockphoto.com/id/1628017363/vector/one-continuous-line-drawing-of-hand-holding-butterfly-beautiful-flying-moth-for-wellbeing.jpg?s=612x612&w=0&k=20&c=kBF-udx3QJU1sH-BZba01tGaj-4JySpsWDmbTvKuP5w=" 
+                        alt="Profile" 
+                        className="w-full h-38 rounded-xl object-cover border-2 border-white shadow-md" 
+                      />
+                    </div>
+                  
                     <div className="mt-4">
                       <ButtonKwity 
                         variant="emerald" 
@@ -581,15 +589,6 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                         <HelpCircle className="mr-2 h-4 w-4" />
                         Help Center
                       </ButtonKwity>
-                    </div>
-
-                    <div className="mt-2">
-                      <Button
-                        variant="outline"
-                        className="w-full text-red-500 hover:text-red-600 hover:bg-red-50 border-red-100"
-                      >
-                        Sign Out
-                      </Button>
                     </div>
                   </div>
                 </TabsContent>

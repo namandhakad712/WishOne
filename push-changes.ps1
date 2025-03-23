@@ -7,7 +7,7 @@ git add .
 $status = git status --porcelain
 if ($status) {
     # Commit changes with a descriptive message
-    git commit -m "Update UI with glassmorphic design for login and signup pages"
+    git commit -m "Update settings: remove signout button and add background image to account tab"
 
     # Push changes to the remote repository
     git push origin main

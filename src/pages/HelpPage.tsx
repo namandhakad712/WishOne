@@ -90,12 +90,6 @@ const HelpPage: React.FC = () => {
       icon: <HelpCircle className="h-5 w-5" />
     },
     {
-      question: "How do I sign out?",
-      answer: "To sign out, go to your profile page and tap the 'Sign Out' button at the bottom of the screen.",
-      category: "Account",
-      icon: <User className="h-5 w-5" />
-    },
-    {
       question: "Is my data secure?",
       answer: "Yes, your data is secure. We use encryption for all data transfers and storage. Your personal information is never shared with third parties.",
       category: "Privacy",
