@@ -14,7 +14,9 @@ export const getGoogleCalendarAuthUrl = () => {
   return supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${window.location.origin}/calendar/callback`,
+      redirectTo: process.env.NODE_ENV === 'production' 
+        ? 'https://wish-one-web.vercel.app/calendar/callback'
+        : `${window.location.origin}/calendar/callback`,
       scopes: 'https://www.googleapis.com/auth/calendar',
     }
   });
