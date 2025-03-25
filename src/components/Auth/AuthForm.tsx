@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { signIn, signUp, signInWithGoogle } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Loader2, AlertCircle, Sparkles, Mail, Lock } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
-import { motion } from "framer-motion";
+import { gsap } from "gsap";
 
 export function AuthForm() {
   const [email, setEmail] = useState("");
@@ -21,28 +21,82 @@ export function AuthForm() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Refs for animation
+  const formRef = useRef<HTMLDivElement>(null);
+  const logoRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const signInFormRef = useRef<HTMLFormElement>(null);
+  const signUpFormRef = useRef<HTMLFormElement>(null);
+  const bgElementsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  
+  // Track previous active tab for animations
+  const prevTabRef = useRef(activeTab);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setErrorMessage(null);
+    
+    // Button loading animation
+    if (buttonRef.current) {
+      gsap.to(buttonRef.current, {
+        scale: 0.95,
+        duration: 0.2,
+        ease: "power1.out"
+      });
+    }
 
     try {
       const { data, error } = await signIn(email, password);
       
       if (error) {
         setErrorMessage(error.message);
+        
+        // Error shake animation
+        if (formRef.current) {
+          gsap.to(formRef.current, {
+            x: 10,
+            duration: 0.1,
+            repeat: 3,
+            yoyo: true,
+            ease: "power1.inOut",
+            onComplete: () => {
+              gsap.to(formRef.current, { x: 0 });
+            }
+          });
+        }
+        
         toast({
           title: "Error signing in",
           description: error.message,
           variant: "destructive",
         });
       } else {
-        toast({
-          title: "Success!",
-          description: "You have been signed in.",
-        });
-        navigate("/dashboard");
+        // Success animation
+        if (formRef.current) {
+          gsap.to(formRef.current, {
+            y: -20,
+            opacity: 0,
+            duration: 0.5,
+            ease: "power2.in",
+            onComplete: () => {
+              toast({
+                title: "Success!",
+                description: "You have been signed in.",
+              });
+              navigate("/dashboard");
+            }
+          });
+        } else {
+          toast({
+            title: "Success!",
+            description: "You have been signed in.",
+          });
+          navigate("/dashboard");
+        }
       }
     } catch (error) {
       // This will only catch unexpected errors not related to the API call
@@ -55,6 +109,14 @@ export function AuthForm() {
       });
     } finally {
       setLoading(false);
+      // Reset button
+      if (buttonRef.current) {
+        gsap.to(buttonRef.current, {
+          scale: 1,
+          duration: 0.2,
+          ease: "power1.out"
+        });
+      }
     }
   };
 
@@ -91,6 +153,15 @@ export function AuthForm() {
     e.preventDefault();
     setLoading(true);
     setErrorMessage(null);
+    
+    // Button loading animation
+    if (buttonRef.current) {
+      gsap.to(buttonRef.current, {
+        scale: 0.95,
+        duration: 0.2,
+        ease: "power1.out"
+      });
+    }
 
     try {
       const { data, error } = await signUp(email, password);
@@ -110,16 +181,48 @@ export function AuthForm() {
           (error.status === 400 && errorMsg.includes("email"))
         ) {
           setErrorMessage("An account with this email already exists. Please sign in instead.");
+          
+          // Animate tab switch
+          gsap.to(cardRef.current, {
+            y: 5,
+            duration: 0.2,
+            ease: "power1.out",
+            onComplete: () => {
+              // Switch to the sign-in tab
+              setActiveTab("signin");
+              
+              // Bounce back
+              gsap.to(cardRef.current, {
+                y: 0,
+                duration: 0.3,
+                ease: "power2.out"
+              });
+            }
+          });
+          
           toast({
             title: "Account already exists",
             description: "An account with this email already exists. Please sign in instead.",
             variant: "default",
           });
-          // Switch to the sign-in tab
-          setActiveTab("signin");
         } else {
           // Handle other errors
           setErrorMessage(error.message);
+          
+          // Error shake animation
+          if (formRef.current) {
+            gsap.to(formRef.current, {
+              x: 10,
+              duration: 0.1,
+              repeat: 3,
+              yoyo: true,
+              ease: "power1.inOut",
+              onComplete: () => {
+                gsap.to(formRef.current, { x: 0 });
+              }
+            });
+          }
+          
           toast({
             title: "Error signing up",
             description: error.message,
@@ -128,10 +231,28 @@ export function AuthForm() {
         }
       } else {
         // Success case
-        toast({
-          title: "Success!",
-          description: "Check your email for the confirmation link.",
-        });
+        // Success animation
+        if (formRef.current) {
+          gsap.to(formRef.current, {
+            y: -10,
+            opacity: 0.8,
+            duration: 0.3,
+            ease: "power2.in",
+            yoyo: true,
+            repeat: 1,
+            onComplete: () => {
+              toast({
+                title: "Success!",
+                description: "Check your email for the confirmation link.",
+              });
+            }
+          });
+        } else {
+          toast({
+            title: "Success!",
+            description: "Check your email for the confirmation link.",
+          });
+        }
       }
     } catch (error) {
       // This will only catch unexpected errors not related to the API call
@@ -144,58 +265,175 @@ export function AuthForm() {
       });
     } finally {
       setLoading(false);
+      // Reset button
+      if (buttonRef.current) {
+        gsap.to(buttonRef.current, {
+          scale: 1,
+          duration: 0.2,
+          ease: "power1.out"
+        });
+      }
     }
   };
+  
+  // Initialize animations
+  useEffect(() => {
+    // Card entrance animation
+    if (cardRef.current) {
+      gsap.fromTo(
+        cardRef.current,
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }
+      );
+    }
+    
+    // Logo animation
+    if (logoRef.current) {
+      gsap.fromTo(
+        logoRef.current,
+        { y: -20, opacity: 0 },
+        { 
+          y: 0, 
+          opacity: 1, 
+          duration: 0.6, 
+          delay: 0.3,
+          ease: "back.out(1.7)" 
+        }
+      );
+      
+      // Continuous floating animation
+      gsap.to(logoRef.current, {
+        y: -5,
+        duration: 2,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut"
+      });
+    }
+    
+    // Background floating elements
+    bgElementsRef.current.forEach((el, index) => {
+      if (!el) return;
+      
+      gsap.fromTo(
+        el,
+        { opacity: 0, scale: 0.8 },
+        { 
+          opacity: 1, 
+          scale: 1, 
+          duration: 0.8,
+          delay: 0.2 * index,
+          ease: "power2.out"
+        }
+      );
+      
+      // Random movement
+      gsap.to(el, {
+        x: (Math.random() - 0.5) * 20,
+        y: (Math.random() - 0.5) * 20,
+        rotation: (Math.random() - 0.5) * 10,
+        duration: 5 + index * 2,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut"
+      });
+    });
+    
+    // Input fields animation
+    inputRefs.current.forEach((input, index) => {
+      if (!input) return;
+      
+      gsap.fromTo(
+        input,
+        { opacity: 0, x: -20 },
+        { 
+          opacity: 1, 
+          x: 0, 
+          duration: 0.5,
+          delay: 0.3 + (index * 0.1),
+          ease: "power2.out"
+        }
+      );
+    });
+    
+    // Cleanup animations on unmount
+    return () => {
+      if (logoRef.current) gsap.killTweensOf(logoRef.current);
+      if (cardRef.current) gsap.killTweensOf(cardRef.current);
+      bgElementsRef.current.forEach(el => {
+        if (el) gsap.killTweensOf(el);
+      });
+      inputRefs.current.forEach(input => {
+        if (input) gsap.killTweensOf(input);
+      });
+    };
+  }, []);
+  
+  // Handle tab changes with animations
+  useEffect(() => {
+    if (prevTabRef.current !== activeTab) {
+      // Animate out current form
+      const currentForm = prevTabRef.current === "signin" ? signInFormRef.current : signUpFormRef.current;
+      const nextForm = activeTab === "signin" ? signInFormRef.current : signUpFormRef.current;
+      
+      if (currentForm && nextForm) {
+        // First animate out
+        gsap.to(currentForm, {
+          opacity: 0,
+          x: prevTabRef.current === "signin" ? -20 : 20,
+          duration: 0.3,
+          ease: "power1.in",
+          onComplete: () => {
+            // Then animate in
+            gsap.fromTo(
+              nextForm,
+              { opacity: 0, x: activeTab === "signin" ? 20 : -20 },
+              { 
+                opacity: 1, 
+                x: 0, 
+                duration: 0.4,
+                ease: "power2.out"
+              }
+            );
+          }
+        });
+      }
+      
+      // Update ref for next time
+      prevTabRef.current = activeTab;
+    }
+  }, [activeTab]);
 
   return (
-    <Card className="w-full max-w-md mx-auto bg-white/40 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/50 overflow-hidden">
+    <Card ref={cardRef} className="w-full max-w-md mx-auto bg-white/40 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/50 overflow-hidden">
       {/* Glass overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 pointer-events-none z-0"></div>
       
       {/* Floating elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div 
+        <div 
+          ref={el => bgElementsRef.current[0] = el}
           className="absolute w-20 h-20 rounded-full bg-purple-300/30 backdrop-blur-md"
-          animate={{ 
-            x: [0, 10, 0], 
-            y: [0, -15, 0],
-            scale: [1, 1.1, 1]
-          }}
-          transition={{ 
-            repeat: Infinity, 
-            duration: 5,
-            ease: "easeInOut" 
-          }}
           style={{ top: '15%', right: '10%' }}
         />
-        <motion.div 
+        <div 
+          ref={el => bgElementsRef.current[1] = el}
           className="absolute w-16 h-16 rounded-full bg-pink-300/30 backdrop-blur-md"
-          animate={{ 
-            x: [0, -10, 0], 
-            y: [0, 10, 0],
-            scale: [1, 1.05, 1]
-          }}
-          transition={{ 
-            repeat: Infinity, 
-            duration: 7,
-            ease: "easeInOut" 
-          }}
           style={{ bottom: '20%', left: '10%' }}
         />
       </div>
       
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="relative z-10">
+      <Tabs ref={formRef} value={activeTab} onValueChange={setActiveTab} className="relative z-10">
         <CardHeader className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-md border-b border-white/30">
           <div className="flex justify-center mb-4">
-            <motion.div 
+            <div 
+              ref={logoRef}
               className="h-16 w-16 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center border-2 border-white/70 shadow-lg"
-              animate={{ y: [0, -5, 0] }}
-              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
             >
               <span className="text-purple-600 font-bold text-2xl flex items-center gap-1">
                 W<Sparkles className="h-4 w-4 text-yellow-500" />
               </span>
-            </motion.div>
+            </div>
           </div>
           <CardTitle className="text-2xl text-center text-gray-800 font-bold">WishOne</CardTitle>
           <CardDescription className="text-center text-gray-600">
@@ -218,7 +456,7 @@ export function AuthForm() {
         )}
 
         <TabsContent value="signin">
-          <form onSubmit={handleSignIn}>
+          <form ref={signInFormRef} onSubmit={handleSignIn}>
             <CardContent className="space-y-4 p-6 bg-gradient-to-b from-white/40 to-white/20 backdrop-blur-md">
               <div className="space-y-2">
                 <Label htmlFor="signin-email" className="text-gray-700 flex items-center gap-2">
@@ -228,6 +466,7 @@ export function AuthForm() {
                 <div className="relative">
                   <Input
                     id="signin-email"
+                    ref={el => inputRefs.current[0] = el}
                     type="email"
                     placeholder="your.email@example.com"
                     value={email}
@@ -245,6 +484,7 @@ export function AuthForm() {
                 <div className="relative">
                   <Input
                     id="signin-password"
+                    ref={el => inputRefs.current[1] = el}
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -256,6 +496,7 @@ export function AuthForm() {
             </CardContent>
             <CardFooter className="flex flex-col gap-4 p-6 bg-white/30 backdrop-blur-md border-t border-white/30">
               <Button 
+                ref={buttonRef}
                 type="submit" 
                 className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-md rounded-xl h-11" 
                 disabled={loading || googleLoading}
@@ -316,7 +557,7 @@ export function AuthForm() {
         </TabsContent>
 
         <TabsContent value="signup">
-          <form onSubmit={handleSignUp}>
+          <form ref={signUpFormRef} onSubmit={handleSignUp}>
             <CardContent className="space-y-4 p-6 bg-gradient-to-b from-white/40 to-white/20 backdrop-blur-md">
               <div className="space-y-2">
                 <Label htmlFor="signup-email" className="text-gray-700 flex items-center gap-2">
@@ -326,6 +567,7 @@ export function AuthForm() {
                 <div className="relative">
                   <Input
                     id="signup-email"
+                    ref={el => inputRefs.current[2] = el}
                     type="email"
                     placeholder="your.email@example.com"
                     value={email}
@@ -343,6 +585,7 @@ export function AuthForm() {
                 <div className="relative">
                   <Input
                     id="signup-password"
+                    ref={el => inputRefs.current[3] = el}
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -357,6 +600,7 @@ export function AuthForm() {
             </CardContent>
             <CardFooter className="flex flex-col gap-4 p-6 bg-white/30 backdrop-blur-md border-t border-white/30">
               <Button 
+                ref={buttonRef}
                 type="submit" 
                 className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-md rounded-xl h-11" 
                 disabled={loading || googleLoading}

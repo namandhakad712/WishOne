@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { format, addDays, isBefore, isAfter } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Gift, Calendar, Bell, ExternalLink, Edit, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { gsap } from 'gsap';
 
 interface Birthday {
   id: string;
@@ -28,6 +29,109 @@ const UpcomingBirthdays: React.FC<UpcomingBirthdaysProps> = ({
   onEditBirthday,
   daysAhead = 30
 }) => {
+  // Add refs for animations
+  const cardRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const monthsRef = useRef<HTMLDivElement>(null);
+  
+  // Initialize animations when component mounts
+  useEffect(() => {
+    if (!cardRef.current) return;
+    
+    const timeline = gsap.timeline({ defaults: { ease: 'power2.out' } });
+    
+    // Card entrance animation
+    gsap.set(cardRef.current, { opacity: 0, y: 20 });
+    timeline.to(cardRef.current, {
+      opacity: 1,
+      y: 0,
+      duration: 0.5,
+      ease: 'back.out(1.2)'
+    });
+    
+    // Header animation
+    if (headerRef.current) {
+      gsap.set(headerRef.current, { opacity: 0, y: -10 });
+      timeline.to(headerRef.current, {
+        opacity: 1,
+        y: 0,
+        duration: 0.4,
+        ease: 'power2.out'
+      }, 0.2);
+    }
+    
+    // Content container animation
+    if (contentRef.current) {
+      gsap.set(contentRef.current, { opacity: 0 });
+      timeline.to(contentRef.current, {
+        opacity: 1,
+        duration: 0.4
+      }, 0.3);
+    }
+    
+    // Setup animations for months and birthday items after a small delay
+    // to ensure the DOM is fully rendered
+    setTimeout(() => {
+      if (monthsRef.current) {
+        // Animate month headers
+        const monthHeaders = monthsRef.current.querySelectorAll('h3');
+        gsap.set(monthHeaders, { opacity: 0, y: 10, scale: 0.95 });
+        timeline.to(monthHeaders, {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.4,
+          stagger: 0.2,
+          ease: 'back.out(1.5)'
+        }, 0.4);
+        
+        // Animate birthday items with staggered effect
+        const monthContainers = monthsRef.current.children;
+        
+        Array.from(monthContainers).forEach((monthContainer, index) => {
+          const birthdayItems = monthContainer.querySelectorAll('.birthday-item');
+          
+          gsap.set(birthdayItems, { opacity: 0, y: 15 });
+          timeline.to(birthdayItems, {
+            opacity: 1,
+            y: 0,
+            duration: 0.4,
+            stagger: 0.1,
+            ease: 'power2.out'
+          }, 0.5 + (index * 0.2));
+          
+          // Add hover effects to each birthday item
+          birthdayItems.forEach(item => {
+            item.addEventListener('mouseenter', () => {
+              gsap.to(item, {
+                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                y: -2,
+                duration: 0.3,
+                ease: 'power2.out'
+              });
+            });
+            
+            item.addEventListener('mouseleave', () => {
+              gsap.to(item, {
+                backgroundColor: 'rgba(255, 255, 255, 0.6)',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                y: 0,
+                duration: 0.3,
+                ease: 'power2.out'
+              });
+            });
+          });
+        });
+      }
+    }, 100);
+    
+    return () => {
+      timeline.kill();
+    };
+  }, [birthdays]); // Re-run when birthdays data changes
+
   // Add debugging effect to log birthdays
   useEffect(() => {
     console.log("UpcomingBirthdays received:", birthdays);
@@ -163,20 +267,20 @@ const UpcomingBirthdays: React.FC<UpcomingBirthdaysProps> = ({
   }, [upcomingBirthdays]);
 
   return (
-    <Card className="w-full border-white/40 bg-white/30 backdrop-blur-md shadow-lg relative overflow-hidden">
+    <Card ref={cardRef} className="w-full border-white/40 bg-white/30 backdrop-blur-md shadow-lg relative overflow-hidden">
       {/* Glassmorphic background elements */}
       <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-purple-300/20 blur-2xl"></div>
       <div className="absolute -bottom-24 -left-24 w-64 h-64 rounded-full bg-green-300/20 blur-2xl"></div>
       
-      <CardHeader className="bg-white/40 backdrop-blur-sm rounded-t-lg border-b border-white/40 relative z-10">
+      <CardHeader ref={headerRef} className="bg-white/40 backdrop-blur-sm rounded-t-lg border-b border-white/40 relative z-10">
         <CardTitle className="text-purple-800 flex items-center gap-2">
           <Gift className="h-5 w-5" />
           Upcoming Birthdays
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4 relative z-10">
+      <CardContent ref={contentRef} className="p-4 relative z-10">
         {upcomingBirthdays.length > 0 ? (
-          <div className="space-y-6">
+          <div ref={monthsRef} className="space-y-6">
             {sortedMonths.map(monthKey => (
               <div key={monthKey} className="space-y-3">
                 <h3 className="font-medium text-purple-800 mb-2 px-3 py-1 bg-white/50 backdrop-blur-sm rounded-full inline-block border border-white/40">
@@ -185,10 +289,34 @@ const UpcomingBirthdays: React.FC<UpcomingBirthdaysProps> = ({
                 {groupedBirthdays[monthKey].map((birthday) => (
                   <div
                     key={birthday.id}
-                    className="p-3 bg-white/60 backdrop-blur-sm rounded-lg shadow-sm hover:shadow-md transition-shadow border border-white/40"
+                    className="birthday-item p-3 bg-white/60 backdrop-blur-sm rounded-lg shadow-sm hover:shadow-md transition-all border border-white/40"
                   >
                     <div className="flex justify-between items-start">
-                      <div className="cursor-pointer" onClick={() => onSelectBirthday(birthday)}>
+                      <div 
+                        className="cursor-pointer" 
+                        onClick={() => {
+                          // Click animation
+                          const element = document.getElementById(`birthday-item-${birthday.id}`);
+                          if (element) {
+                            gsap.to(element, {
+                              scale: 0.97,
+                              duration: 0.2,
+                              ease: 'power1.out',
+                              onComplete: () => {
+                                gsap.to(element, {
+                                  scale: 1,
+                                  duration: 0.3,
+                                  ease: 'back.out(1.5)',
+                                  onComplete: () => onSelectBirthday(birthday)
+                                });
+                              }
+                            });
+                          } else {
+                            onSelectBirthday(birthday);
+                          }
+                        }}
+                        id={`birthday-item-${birthday.id}`}
+                      >
                         <h3 className="font-medium text-gray-800">
                           {birthday.name}
                         </h3>
@@ -230,7 +358,23 @@ const UpcomingBirthdays: React.FC<UpcomingBirthdaysProps> = ({
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 rounded-full hover:bg-purple-100/50 bg-white/50 backdrop-blur-sm"
-                          onClick={() => onSelectBirthday(birthday)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Button press animation
+                            gsap.to(e.currentTarget, {
+                              scale: 0.9,
+                              duration: 0.1,
+                              ease: 'power1.out',
+                              onComplete: () => {
+                                gsap.to(e.currentTarget, {
+                                  scale: 1,
+                                  duration: 0.2,
+                                  ease: 'back.out(3)',
+                                  onComplete: () => onSelectBirthday(birthday)
+                                });
+                              }
+                            });
+                          }}
                           aria-label="View details"
                         >
                           <Info className="h-4 w-4 text-purple-600" />
@@ -240,7 +384,25 @@ const UpcomingBirthdays: React.FC<UpcomingBirthdaysProps> = ({
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 rounded-full hover:bg-purple-100/50 bg-white/50 backdrop-blur-sm"
-                            onClick={() => onEditBirthday(birthday.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Button press animation
+                              gsap.to(e.currentTarget, {
+                                scale: 0.9,
+                                duration: 0.1,
+                                ease: 'power1.out',
+                                onComplete: () => {
+                                  gsap.to(e.currentTarget, {
+                                    scale: 1,
+                                    duration: 0.2,
+                                    ease: 'back.out(3)',
+                                    onComplete: () => {
+                                      if (onEditBirthday) onEditBirthday(birthday.id);
+                                    }
+                                  });
+                                }
+                              });
+                            }}
                             aria-label="Edit birthday"
                           >
                             <Edit className="h-4 w-4 text-purple-600" />

@@ -33,6 +33,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { generateResponse, analyzeImage } from "@/lib/gemini";
 import { useSupabase } from "@/contexts/SupabaseContext";
+import { gsap } from "gsap";
 
 interface Message {
   id: string;
@@ -95,6 +96,12 @@ const AIChatbot = ({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [chatHistory, setChatHistory] = useState<{ date: string; messages: Message[] }[]>([]);
 
+  // Animation refs
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const inputAreaRef = useRef<HTMLDivElement>(null);
+  const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  
   // Use props messages if provided, otherwise use local state
   const displayMessages = messages.length > 0 ? messages : localMessages;
 
@@ -333,8 +340,104 @@ const AIChatbot = ({
     setChatHistory(groupedMessages);
   }, [messages]);
 
+  // Initialize animations when component mounts
+  useEffect(() => {
+    if (!chatContainerRef.current) return;
+    
+    // Initial animation for the chat container
+    gsap.fromTo(
+      chatContainerRef.current,
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }
+    );
+    
+    // Animate header
+    if (headerRef.current) {
+      gsap.fromTo(
+        headerRef.current,
+        { opacity: 0, y: -20 },
+        { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", delay: 0.2 }
+      );
+    }
+    
+    // Animate input area
+    if (inputAreaRef.current) {
+      gsap.fromTo(
+        inputAreaRef.current,
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", delay: 0.3 }
+      );
+    }
+  }, []);
+  
+  // Function to register message ref
+  const registerMessageRef = (id: string, ref: HTMLDivElement | null) => {
+    if (ref) {
+      messageRefs.current[id] = ref;
+    }
+  };
+  
+  // Animation for new message
+  useEffect(() => {
+    // Only run if there are messages
+    if (!displayMessages.length) return;
+    
+    // Get the latest message
+    const latestMessage = displayMessages[displayMessages.length - 1];
+    
+    // Get the ref of the latest message
+    const messageRef = messageRefs.current[latestMessage.id];
+    
+    if (messageRef) {
+      // Animate the latest message
+      gsap.fromTo(
+        messageRef,
+        { 
+          opacity: 0, 
+          scale: 0.9,
+          x: latestMessage.sender === "user" ? 20 : -20 
+        },
+        { 
+          opacity: 1, 
+          scale: 1,
+          x: 0, 
+          duration: 0.4, 
+          ease: "back.out(1.7)" 
+        }
+      );
+    }
+  }, [displayMessages.length]);
+  
+  // Button hover animations
+  const animateButtonHover = (element: HTMLElement, isEnter: boolean) => {
+    gsap.to(element, {
+      scale: isEnter ? 1.1 : 1,
+      duration: 0.2,
+      ease: "power1.out"
+    });
+  };
+
+  // Add animation for send button click
+  const handleSendButtonClick = () => {
+    const sendButton = document.querySelector(".send-button");
+    if (sendButton) {
+      gsap.to(sendButton, {
+        scale: 0.9,
+        duration: 0.1,
+        yoyo: true,
+        repeat: 1,
+        onComplete: handleSendMessage
+      });
+    } else {
+      handleSendMessage();
+    }
+  };
+
   return (
-    <div className="flex h-[600px] w-full sm:w-[500px] rounded-xl shadow-lg bg-white/60 backdrop-blur-sm border border-white/40 overflow-hidden">
+    <div 
+      ref={chatContainerRef}
+      className="flex h-[600px] w-full sm:w-[500px] rounded-xl shadow-lg bg-white/60 backdrop-blur-sm border border-white/40 overflow-hidden"
+    >
       {/* Sidebar */}
       <AnimatePresence>
         {isSidebarOpen && (
@@ -423,7 +526,10 @@ const AIChatbot = ({
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header */}
-        <div className="p-4 border-b border-white/40 bg-gradient-to-r from-purple-500/20 to-purple-600/20 backdrop-blur-sm rounded-t-xl flex items-center">
+        <div 
+          ref={headerRef}
+          className="p-4 border-b border-white/40 bg-gradient-to-r from-purple-500/20 to-purple-600/20 backdrop-blur-sm rounded-t-xl flex items-center"
+        >
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             className="p-2 hover:bg-white/20 rounded-lg transition-colors mr-2"
@@ -453,6 +559,8 @@ const AIChatbot = ({
           {displayMessages.map((message) => (
             <div
               key={message.id}
+              id={`message-${message.id}`}
+              ref={(el) => registerMessageRef(message.id, el)}
               className={`flex ${
                 message.sender === "user" ? "justify-end" : "justify-start"
               } w-full`}
@@ -583,6 +691,8 @@ const AIChatbot = ({
           <button
             onClick={scrollToBottom}
             className="absolute bottom-24 right-4 p-2 rounded-full bg-purple-600 text-white shadow-lg hover:bg-purple-700 transition-colors"
+            onMouseEnter={(e) => animateButtonHover(e.currentTarget, true)}
+            onMouseLeave={(e) => animateButtonHover(e.currentTarget, false)}
           >
             <ChevronDown className="h-4 w-4" />
           </button>
@@ -618,7 +728,10 @@ const AIChatbot = ({
         </AnimatePresence>
 
         {/* Input Area */}
-      <div className="p-4 border-t border-white/40 bg-white/50 backdrop-blur-sm rounded-b-xl">
+      <div 
+        ref={inputAreaRef}
+        className="p-4 border-t border-white/40 bg-white/50 backdrop-blur-sm rounded-b-xl"
+      >
         {imageData && (
           <div className="mb-2 relative">
             <img
@@ -646,7 +759,12 @@ const AIChatbot = ({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <label htmlFor="file-upload" className="cursor-pointer">
+                  <label 
+                    htmlFor="file-upload" 
+                    className="cursor-pointer"
+                    onMouseEnter={(e) => animateButtonHover(e.currentTarget, true)}
+                    onMouseLeave={(e) => animateButtonHover(e.currentTarget, false)}
+                  >
                     <div className="p-2 rounded-full bg-white/70 hover:bg-white/90 border border-white/40 transition-colors">
                       <ImageIcon className="h-5 w-5 text-purple-600" />
                     </div>
@@ -665,10 +783,12 @@ const AIChatbot = ({
               className="hidden"
             />
             <Button
-              onClick={handleSendMessage}
+              onClick={handleSendButtonClick}
               size="icon"
-              className="rounded-full bg-purple-600/90 hover:bg-purple-700 shadow-sm"
+              className="rounded-full bg-purple-600/90 hover:bg-purple-700 shadow-sm send-button"
               disabled={(!newMessage.trim() && !imageData) || isLoading}
+              onMouseEnter={(e) => animateButtonHover(e.currentTarget, true)}
+              onMouseLeave={(e) => animateButtonHover(e.currentTarget, false)}
             >
               {isLoading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />

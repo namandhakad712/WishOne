@@ -1,13 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import LiquidGradientBackground from './LiquidGradientBackground';
 import AIGreeting from './AIGreeting';
 import ExpandableMenu from './ExpandableMenu';
 import HomeHeader from './HomeHeader';
 import FrostGlassOverlay from './FrostGlassOverlay';
 import { getUserSettings } from '@/lib/supabaseClient';
+import ScrollAnimatedElement from './ScrollAnimatedElement';
+import AnimatedElement from './AnimatedElement';
+import { gsap } from 'gsap';
 
 const HomeScreen: React.FC = () => {
   const [showFrostEffect, setShowFrostEffect] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   
   // Load settings on component mount
   useEffect(() => {
@@ -36,8 +43,52 @@ const HomeScreen: React.FC = () => {
     loadSettings();
   }, []);
   
+  // Initial animation sequence when the component mounts
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    // Create a timeline for sequential animations
+    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+    
+    // Animate background
+    tl.fromTo(
+      containerRef.current,
+      { opacity: 0 },
+      { opacity: 1, duration: 0.8 },
+      0
+    );
+    
+    // Animate header
+    tl.fromTo(
+      headerRef.current,
+      { y: -50, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.6 },
+      0.2
+    );
+    
+    // Animate main content
+    tl.fromTo(
+      contentRef.current,
+      { scale: 0.9, opacity: 0 },
+      { scale: 1, opacity: 1, duration: 0.8 },
+      0.5
+    );
+    
+    // Animate menu
+    tl.fromTo(
+      menuRef.current,
+      { y: 50, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.6 },
+      0.7
+    );
+    
+    return () => {
+      tl.kill();
+    };
+  }, []);
+  
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
+    <div ref={containerRef} className="min-h-screen flex flex-col relative overflow-hidden">
       {/* Background */}
       <LiquidGradientBackground />
       
@@ -47,17 +98,28 @@ const HomeScreen: React.FC = () => {
       {/* Content - ensure it's above the frost overlay */}
       <div className="flex-1 flex flex-col h-full relative z-20">
         {/* Header */}
-        <HomeHeader />
+        <div ref={headerRef}>
+          <AnimatedElement type="slideDown" delay={0.2} duration={0.8}>
+            <HomeHeader />
+          </AnimatedElement>
+        </div>
         
         {/* Main Content */}
-        <div className="flex-1 flex items-center justify-center px-6 pb-24">
-          <AIGreeting />
+        <div 
+          ref={contentRef} 
+          className="flex-1 flex items-center justify-center px-6 pb-24"
+        >
+          <ScrollAnimatedElement type="zoomIn" duration={1} delay={0.3}>
+            <AIGreeting />
+          </ScrollAnimatedElement>
         </div>
       </div>
       
       {/* Menu - positioned absolutely and above frost overlay */}
-      <div className="relative z-20">
-        <ExpandableMenu />
+      <div ref={menuRef} className="relative z-20">
+        <AnimatedElement type="slideUp" delay={0.6} duration={0.8}>
+          <ExpandableMenu />
+        </AnimatedElement>
       </div>
     </div>
   );

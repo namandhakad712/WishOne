@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import AIChatbot from "./AIChatbot";
 import BottomTabBar from "./BottomTabBar";
 import ApiKeyMissing from "./ApiKeyMissing";
 import { generateResponse, analyzeImage, generateBirthdayWish } from "@/lib/gemini";
+import { gsap } from "gsap";
 
 // Check if API key is available
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
@@ -43,6 +44,11 @@ const ChatPage = () => {
   const [currentPersonality, setCurrentPersonality] = useState<"formal" | "casual" | "friendly" | "professional">("friendly");
   const [messageContext, setMessageContext] = useState<string[]>([]);
   
+  // Animation refs
+  const pageRef = useRef<HTMLDivElement>(null);
+  const chatbotContainerRef = useRef<HTMLDivElement>(null);
+  const bgElementsRef = useRef<HTMLDivElement>(null);
+  
   // Check for birthdays on component mount
   useEffect(() => {
     checkBirthdays();
@@ -51,18 +57,98 @@ const ChatPage = () => {
     setApiKeyValid(isValidApiKey(apiKey));
   }, []);
   
+  // Initialize animations when component mounts
+  useEffect(() => {
+    if (!pageRef.current) return;
+    
+    const timeline = gsap.timeline({ defaults: { ease: 'power2.out' } });
+    
+    // Animate background elements
+    if (bgElementsRef.current) {
+      const bgElements = bgElementsRef.current.children;
+      gsap.set(bgElements, { opacity: 0, scale: 0.8 });
+      
+      timeline.to(bgElements, {
+        opacity: 0.8,
+        scale: 1,
+        duration: 1.5,
+        stagger: 0.3,
+        ease: 'power1.out'
+      }, 0);
+    }
+    
+    // Animate chatbot container
+    if (chatbotContainerRef.current) {
+      timeline.fromTo(
+        chatbotContainerRef.current,
+        { y: 30, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6 },
+        0.5
+      );
+    }
+    
+    return () => {
+      timeline.kill();
+    };
+  }, []);
+  
+  // Animation when API key validity changes
+  useEffect(() => {
+    if (!chatbotContainerRef.current) return;
+    
+    gsap.fromTo(
+      chatbotContainerRef.current,
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 0.5, ease: "back.out(1.2)" }
+    );
+  }, [apiKeyValid]);
+  
   // Clear all chat history except the initial greeting
   const clearChatHistory = () => {
-    setMessages([{
-      id: "1",
-      content:
-        "Hi there! I'm your WishOne companion. I'm here to chat, help with birthdays, or just be a friendly presence. How are you feeling today?",
-      sender: "ai",
-      timestamp: new Date(),
-      status: "read",
-      personality: "friendly",
-    }]);
-    setMessageContext([]);
+    // Add clearing animation
+    if (chatbotContainerRef.current) {
+      // Create a quick fade out and back in animation
+      gsap.to(chatbotContainerRef.current, {
+        opacity: 0,
+        y: 10,
+        duration: 0.3,
+        ease: "power2.in",
+        onComplete: () => {
+          // Reset messages
+          setMessages([{
+            id: "1",
+            content:
+              "Hi there! I'm your WishOne companion. I'm here to chat, help with birthdays, or just be a friendly presence. How are you feeling today?",
+            sender: "ai",
+            timestamp: new Date(),
+            status: "read",
+            personality: "friendly",
+          }]);
+          setMessageContext([]);
+          
+          // Fade back in
+          gsap.to(chatbotContainerRef.current, {
+            opacity: 1,
+            y: 0,
+            duration: 0.4,
+            ease: "power2.out",
+            delay: 0.1
+          });
+        }
+      });
+    } else {
+      // Fallback if ref isn't available
+      setMessages([{
+        id: "1",
+        content:
+          "Hi there! I'm your WishOne companion. I'm here to chat, help with birthdays, or just be a friendly presence. How are you feeling today?",
+        sender: "ai",
+        timestamp: new Date(),
+        status: "read",
+        personality: "friendly",
+      }]);
+      setMessageContext([]);
+    }
   };
 
   // Update context when messages change
@@ -125,6 +211,17 @@ const ChatPage = () => {
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setIsLoading(true);
     setReplyingTo(null);
+    
+    // Animate the chat container when sending a message
+    if (chatbotContainerRef.current) {
+      gsap.to(chatbotContainerRef.current, {
+        y: -5,
+        duration: 0.2,
+        yoyo: true,
+        repeat: 1,
+        ease: "power1.inOut"
+      });
+    }
     
     try {
       // Build context-aware prompt
@@ -204,6 +301,17 @@ const ChatPage = () => {
         setMessages((prevMessages) => [...prevMessages, aiMessage]);
       }
       
+      // Add a subtle animation when the AI is thinking
+      if (chatbotContainerRef.current) {
+        gsap.to(chatbotContainerRef.current, {
+          boxShadow: "0 0 20px rgba(147, 51, 234, 0.3)",
+          duration: 1,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut"
+        });
+      }
+      
       // Update message status
       setTimeout(() => {
         setMessages((prev) =>
@@ -223,6 +331,28 @@ const ChatPage = () => {
     } catch (error) {
       console.error("Error generating response:", error);
       
+      // Stop the thinking animation on error
+      if (chatbotContainerRef.current) {
+        gsap.to(chatbotContainerRef.current, {
+          boxShadow: "0 0 0px rgba(147, 51, 234, 0)",
+          duration: 0.5
+        });
+      }
+      
+      // Show error shake animation
+      if (chatbotContainerRef.current) {
+        gsap.to(chatbotContainerRef.current, {
+          x: 10,
+          duration: 0.1,
+          repeat: 5,
+          yoyo: true,
+          ease: "power1.inOut",
+          onComplete: () => {
+            gsap.to(chatbotContainerRef.current, { x: 0 });
+          }
+        });
+      }
+      
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: "I'm feeling a bit disconnected right now. Can we try again in a moment?",
@@ -240,10 +370,38 @@ const ChatPage = () => {
 
   const handleReplyTo = (messageId: string) => {
     setReplyingTo(messageId);
+    
+    // Highlight the message being replied to
+    const messageElement = document.getElementById(`message-${messageId}`);
+    if (messageElement) {
+      gsap.fromTo(
+        messageElement,
+        { backgroundColor: "rgba(147, 51, 234, 0.2)" },
+        { 
+          backgroundColor: "rgba(147, 51, 234, 0)",
+          duration: 1.5,
+          ease: "power2.out"
+        }
+      );
+    }
   };
 
   const handleUploadMedia = async (file: File) => {
     setIsLoading(true);
+    
+    // Animate the file upload progress
+    if (chatbotContainerRef.current) {
+      gsap.fromTo(
+        chatbotContainerRef.current,
+        { boxShadow: "0 0 0px rgba(147, 51, 234, 0)" },
+        { 
+          boxShadow: "0 0 20px rgba(147, 51, 234, 0.3)", 
+          duration: 0.5,
+          yoyo: true,
+          repeat: -1
+        }
+      );
+    }
     
     try {
       // Convert file to base64
@@ -286,8 +444,38 @@ const ChatPage = () => {
             : msg
         )
       );
+      
+      // Stop the upload animation
+      if (chatbotContainerRef.current) {
+        gsap.to(chatbotContainerRef.current, {
+          boxShadow: "0 0 0px rgba(147, 51, 234, 0)",
+          duration: 0.5
+        });
+      }
     } catch (error) {
       console.error("Error analyzing image:", error);
+      
+      // Stop the upload animation
+      if (chatbotContainerRef.current) {
+        gsap.to(chatbotContainerRef.current, {
+          boxShadow: "0 0 0px rgba(147, 51, 234, 0)",
+          duration: 0.5
+        });
+      }
+      
+      // Show error shake animation
+      if (chatbotContainerRef.current) {
+        gsap.to(chatbotContainerRef.current, {
+          x: 10,
+          duration: 0.1,
+          repeat: 5,
+          yoyo: true,
+          ease: "power1.inOut",
+          onComplete: () => {
+            gsap.to(chatbotContainerRef.current, { x: 0 });
+          }
+        });
+      }
       
       // Add error message with emotional tone
       let errorMessage: Message;
@@ -343,6 +531,41 @@ const ChatPage = () => {
   const handlePersonalityChange = (personality: "formal" | "casual" | "friendly" | "professional") => {
     setCurrentPersonality(personality);
     
+    // Add animation for personality change
+    if (chatbotContainerRef.current) {
+      // Create a flash effect with the personality color
+      const personalityColors = {
+        formal: "rgba(59, 130, 246, 0.2)",      // Blue for formal
+        casual: "rgba(16, 185, 129, 0.2)",      // Green for casual
+        friendly: "rgba(236, 72, 153, 0.2)",    // Pink for friendly
+        professional: "rgba(124, 58, 237, 0.2)" // Purple for professional
+      };
+      
+      // Create pulsing effect
+      gsap.fromTo(
+        chatbotContainerRef.current,
+        { 
+          boxShadow: `0 0 20px ${personalityColors[personality]}`,
+          scale: 1
+        },
+        {
+          boxShadow: "0 0 0px rgba(0, 0, 0, 0)",
+          scale: 1.02,
+          duration: 0.8,
+          ease: "elastic.out(1, 0.5)",
+          yoyo: true,
+          repeat: 1,
+          onComplete: () => {
+            gsap.to(chatbotContainerRef.current, {
+              scale: 1,
+              duration: 0.3,
+              ease: "power2.out"
+            });
+          }
+        }
+      );
+    }
+    
     // Add a message indicating the personality change
     const systemMessage: Message = {
       id: Date.now().toString(),
@@ -357,16 +580,16 @@ const ChatPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-100 via-blue-50 to-white relative overflow-hidden">
+    <div ref={pageRef} className="min-h-screen bg-gradient-to-b from-purple-100 via-blue-50 to-white relative overflow-hidden">
       {/* Glassmorphic background elements */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+      <div ref={bgElementsRef} className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute -top-64 -right-64 w-[500px] h-[500px] rounded-full bg-purple-300/20 blur-3xl"></div>
         <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] rounded-full bg-blue-300/20 blur-3xl"></div>
         <div className="absolute -bottom-64 -left-64 w-[500px] h-[500px] rounded-full bg-green-300/20 blur-3xl"></div>
       </div>
       
       <div className="relative z-10 flex flex-col items-center justify-center pb-20 px-4 pt-6">
-        <div className="w-full max-w-md flex-1 flex flex-col items-center justify-center">
+        <div ref={chatbotContainerRef} className="w-full max-w-md flex-1 flex flex-col items-center justify-center">
           {!apiKeyValid ? (
             <ApiKeyMissing 
               service="Gemini AI" 

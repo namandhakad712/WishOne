@@ -35,97 +35,76 @@ const PrivacyPolicyPage = () => {
           <div className="container mx-auto max-w-3xl">
             <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/40 p-6 prose prose-purple max-w-none">
               <h2 className="text-xl font-semibold text-purple-800 mb-4">WishOne Privacy Policy</h2>
-              <p className="text-gray-700 mb-6">Last Updated: {new Date().toLocaleDateString()}</p>
+              <p className="text-gray-700 mb-6">Last Updated: March 24, 2025</p>
 
               <section className="mb-6">
-                <h3 className="text-lg font-medium text-purple-700 mb-2">1. Introduction</h3>
-                <p>Welcome to WishOne! Your privacy is important to us. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our application.</p>
-                <p>Please read this Privacy Policy carefully. By using WishOne, you agree to the collection and use of information in accordance with this policy.</p>
+                <h3 className="text-lg font-medium text-purple-700 mb-2">1. Hey There!</h3>
+                <p>Welcome to WishOne! We're thrilled you're here. This app is all about spreading good vibes and keeping things simple. We're not into collecting your data or sneaking around behind your back—this policy is just to let you know how open and honest we are.</p>
+                <p>By using WishOne, you're joining a little project built with an open mind and a big heart. Let's keep it fun and free!</p>
               </section>
 
               <section className="mb-6">
-                <h3 className="text-lg font-medium text-purple-700 mb-2">2. Information We Collect</h3>
-                <p>We may collect several types of information, including:</p>
+                <h3 className="text-lg font-medium text-purple-700 mb-2">2. We Don't Collect Anything</h3>
+                <p>Seriously, we don't grab any data from you. Here's what that means:</p>
                 <ul className="list-disc pl-6 mb-4">
-                  <li><strong>Personal Information</strong>: Name, email address, and profile information you provide.</li>
-                  <li><strong>Birthday Information</strong>: Dates and details you add about your contacts.</li>
-                  <li><strong>Usage Data</strong>: How you interact with the app, features you use, and preferences.</li>
-                  <li><strong>Device Information</strong>: Device type, operating system, and browser information.</li>
+                  <li>No names, emails, or personal details.</li>
+                  <li>No birthday info or contact lists.</li>
+                  <li>No tracking how you use the app or what you click on.</li>
+                  <li>No device info, like what phone you've got or what system it's running.</li>
+                </ul>
+                <p>You use WishOne, and that's it—nothing leaves your hands or sneaks back to us.</p>
+              </section>
+
+              <section className="mb-6">
+                <h3 className="text-lg font-medium text-purple-700 mb-2">3. How We Use... Well, Nothing!</h3>
+                <p>Since we don't collect any info, we don't use it either. The app's here to help you enjoy it however you like:</p>
+                <ul className="list-disc pl-6 mb-4">
+                  <li>No sneaky notifications (unless you ask for something specific).</li>
+                  <li>No "personalized" stuff based on data—because we don't have any!</li>
+                  <li>No analyzing you. Just a clean, open experience.</li>
                 </ul>
               </section>
 
               <section className="mb-6">
-                <h3 className="text-lg font-medium text-purple-700 mb-2">3. How We Use Your Information</h3>
-                <p>We use the information we collect to:</p>
+                <h3 className="text-lg font-medium text-purple-700 mb-2">4. AI? Only If You Want It</h3>
+                <p>WishOne might let you chat with an AI buddy (powered by Google's Gemini API) if we add that feature. Here's the deal:</p>
                 <ul className="list-disc pl-6 mb-4">
-                  <li>Provide, maintain, and improve our services</li>
-                  <li>Process your requests and respond to your inquiries</li>
-                  <li>Send notifications about birthdays and events</li>
-                  <li>Personalize your experience and content</li>
-                  <li>Analyze usage patterns to enhance our application</li>
+                  <li>If you type something to the AI, it processes it right then and there.</li>
+                  <li>We don't save your chats. They're gone when you're done.</li>
+                  <li>Nothing's tied to you—no names, no traces.</li>
+                  <li>The AI might get smarter from what people say, but it's all anonymous.</li>
                 </ul>
+                <p>Want to know more? Check out Google's AI vibe at <a href="https://ai.google/responsibility/" className="text-purple-600 hover:text-purple-800 underline" target="_blank" rel="noopener noreferrer">ai.google/responsibility/</a>.</p>
               </section>
 
               <section className="mb-6">
-                <h3 className="text-lg font-medium text-purple-700 mb-2">4. AI Features and Data</h3>
-                <p>WishOne uses artificial intelligence to enhance your experience:</p>
-                <ul className="list-disc pl-6 mb-4">
-                  <li>Content you share with our AI assistant may be processed by Google's Gemini API</li>
-                  <li>We do not permanently store the content of your conversations with the AI</li>
-                  <li>Your conversations help improve the AI's responses but are not linked to your identity</li>
-                </ul>
-                <p>You can learn more about Google's AI principles and data handling at <a href="https://ai.google/responsibility/" className="text-purple-600 hover:text-purple-800 underline" target="_blank" rel="noopener noreferrer">https://ai.google/responsibility/</a></p>
+                <h3 className="text-lg font-medium text-purple-700 mb-2">5. Sharing? Nope, Not Happening</h3>
+                <p>We've got nothing to share because we don't take anything. No selling, no trading, no passing stuff along to anyone—ever. Not to service providers, not to anyone. It's just you and the app.</p>
               </section>
 
               <section className="mb-6">
-                <h3 className="text-lg font-medium text-purple-700 mb-2">5. Information Sharing</h3>
-                <p>We do not sell, trade, or otherwise transfer your personal information to third parties without your consent, except in the following cases:</p>
-                <ul className="list-disc pl-6 mb-4">
-                  <li>With service providers who help us operate our application</li>
-                  <li>To comply with legal obligations</li>
-                  <li>To protect our rights and safety</li>
-                </ul>
+                <h3 className="text-lg font-medium text-purple-700 mb-2">6. Security? It's Chill</h3>
+                <p>Since we're not collecting or storing anything, there's no data to protect. No vaults, no locks—just an open app doing its thing. You're in control of whatever happens on your device.</p>
               </section>
 
               <section className="mb-6">
-                <h3 className="text-lg font-medium text-purple-700 mb-2">6. Data Security</h3>
-                <p>We implement appropriate security measures to protect your personal information:</p>
-                <ul className="list-disc pl-6 mb-4">
-                  <li>Encryption of data in transit and at rest</li>
-                  <li>Regular security assessments and updates</li>
-                  <li>Restricted access to personal information</li>
-                </ul>
-                <p>However, no method of transmission or storage is 100% secure. We cannot guarantee absolute security.</p>
+                <h3 className="text-lg font-medium text-purple-700 mb-2">7. Your Rights (You've Got Them All!)</h3>
+                <p>You're the boss of your info. Since we don't hold anything, there's nothing to access, delete, or change on our end. If you've got questions about your privacy, hit us up anyway—we're happy to chat.</p>
               </section>
 
               <section className="mb-6">
-                <h3 className="text-lg font-medium text-purple-700 mb-2">7. Your Privacy Rights</h3>
-                <p>Depending on your location, you may have rights regarding your personal information:</p>
-                <ul className="list-disc pl-6 mb-4">
-                  <li>Access your personal information</li>
-                  <li>Correct inaccurate or incomplete information</li>
-                  <li>Delete your personal information</li>
-                  <li>Restrict or object to processing</li>
-                  <li>Data portability</li>
-                </ul>
-                <p>To exercise these rights, please contact us using the information in the "Contact Us" section.</p>
+                <h3 className="text-lg font-medium text-purple-700 mb-2">8. Kids? Everyone's Welcome (But No Data!)</h3>
+                <p>WishOne is for everyone, kids included. We don't collect anything from anyone, so no worries about little ones. Parents, you're good—we're not after anyone's info.</p>
               </section>
 
               <section className="mb-6">
-                <h3 className="text-lg font-medium text-purple-700 mb-2">8. Children's Privacy</h3>
-                <p>WishOne is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13. If you are a parent or guardian and believe your child has provided us with personal information, please contact us.</p>
+                <h3 className="text-lg font-medium text-purple-700 mb-2">9. Updates to This Policy</h3>
+                <p>If we tweak this policy (like if we add a cool feature), we'll pop the new version here and update the date at the top. Check back whenever you feel like it—though honestly, it'll stay pretty simple.</p>
               </section>
 
               <section className="mb-6">
-                <h3 className="text-lg font-medium text-purple-700 mb-2">9. Changes to This Privacy Policy</h3>
-                <p>We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last Updated" date.</p>
-                <p>We encourage you to review this Privacy Policy periodically for any changes.</p>
-              </section>
-
-              <section className="mb-6">
-                <h3 className="text-lg font-medium text-purple-700 mb-2">10. Contact Us</h3>
-                <p>If you have any questions about this Privacy Policy, please contact us at:</p>
-                <p className="font-medium">privacy@wishone.app</p>
+                <h3 className="text-lg font-medium text-purple-700 mb-2">10. Say Hi Anytime</h3>
+                <p>Got questions? Want to talk about WishOne? Contact us at the <strong>"App Support" form in the /help page</strong>.</p>
               </section>
             </div>
           </div>

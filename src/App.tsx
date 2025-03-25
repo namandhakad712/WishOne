@@ -7,6 +7,7 @@ import WelcomeWindow from "./components/WelcomeWindow";
 import LoginPage from "./pages/LoginPage";
 import HelpPage from "./pages/HelpPage";
 import CalendarPage from "./pages/CalendarPage";
+import AnimationDemo from "./pages/AnimationDemo";
 import { ProtectedRoute } from "./components/Auth/ProtectedRoute";
 import { Toaster } from "./components/ui/toaster";
 import { SupabaseStatus } from "./components/SupabaseStatus";
@@ -16,6 +17,7 @@ import routes from "tempo-routes";
 import { AuthCallback } from "./components/Auth/AuthCallback";
 import { CalendarCallback } from "./components/Calendar/CalendarCallback";
 import { RetroModeProvider } from "@/contexts/RetroModeContext";
+import { GSAPProvider } from "./contexts/GSAPContext";
 import TermsConditionsPage from "./pages/TermsConditionsPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 
@@ -42,34 +44,37 @@ function App() {
 
   return (
     <RetroModeProvider>
-      <Suspense fallback={<p>Loading...</p>}>
-        <>
-          {showWelcome && <WelcomeWindow onClose={handleCloseWelcome} />}
-          <UserSynchronizer />
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<HomeScreen />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/help" element={<HelpPage />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/terms" element={<TermsConditionsPage />} />
-            <Route path="/privacy" element={<PrivacyPolicyPage />} />
-            
-            {/* Protected routes */}
-            <Route element={<ProtectedRoute />}>
-              <Route path="/chat" element={<ChatPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/dashboard" element={<HomeScreen />} />
-              <Route path="/calendar" element={<CalendarPage />} />
-              <Route path="/calendar/callback" element={<CalendarCallback />} />
-            </Route>
-          </Routes>
-          {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
-          <Toaster />
-          {/* Only show connection status in development */}
-          {import.meta.env.DEV && <ConnectionStatus />}
-        </>
-      </Suspense>
+      <GSAPProvider>
+        <Suspense fallback={<p>Loading...</p>}>
+          <>
+            {showWelcome && <WelcomeWindow onClose={handleCloseWelcome} />}
+            <UserSynchronizer />
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<HomeScreen />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/help" element={<HelpPage />} />
+              <Route path="/animations" element={<AnimationDemo />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/terms" element={<TermsConditionsPage />} />
+              <Route path="/privacy" element={<PrivacyPolicyPage />} />
+              
+              {/* Protected routes */}
+              <Route element={<ProtectedRoute />}>
+                <Route path="/chat" element={<ChatPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/dashboard" element={<HomeScreen />} />
+                <Route path="/calendar" element={<CalendarPage />} />
+                <Route path="/calendar/callback" element={<CalendarCallback />} />
+              </Route>
+            </Routes>
+            {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
+            <Toaster />
+            {/* Only show connection status in development */}
+            {import.meta.env.DEV && <ConnectionStatus />}
+          </>
+        </Suspense>
+      </GSAPProvider>
     </RetroModeProvider>
   );
 }

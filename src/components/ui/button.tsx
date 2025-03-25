@@ -1,6 +1,7 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
+import { gsap } from "gsap"
 
 import { cn } from "@/lib/utils"
 
@@ -38,15 +39,83 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean
+  noAnimation?: boolean
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, noAnimation = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
+    const buttonRef = React.useRef<HTMLButtonElement>(null)
+    
+    // Merge refs
+    const mergedRef = (node: HTMLButtonElement) => {
+      if (typeof ref === 'function') {
+        ref(node)
+      } else if (ref) {
+        ref.current = node
+      }
+      buttonRef.current = node
+    }
+    
+    React.useEffect(() => {
+      const button = buttonRef.current
+      if (!button || noAnimation) return
+      
+      // Hover animation
+      const handleMouseEnter = () => {
+        gsap.to(button, {
+          scale: 1.03,
+          duration: 0.2,
+          ease: "power1.out",
+        })
+      }
+      
+      // Mouse leave animation
+      const handleMouseLeave = () => {
+        gsap.to(button, {
+          scale: 1,
+          duration: 0.2,
+          ease: "power1.out",
+        })
+      }
+      
+      // Mouse down animation
+      const handleMouseDown = () => {
+        gsap.to(button, {
+          scale: 0.97,
+          duration: 0.1,
+          ease: "power1.in",
+        })
+      }
+      
+      // Mouse up animation
+      const handleMouseUp = () => {
+        gsap.to(button, {
+          scale: 1.03,
+          duration: 0.2,
+          ease: "power1.out",
+        })
+      }
+      
+      // Add event listeners
+      button.addEventListener('mouseenter', handleMouseEnter)
+      button.addEventListener('mouseleave', handleMouseLeave)
+      button.addEventListener('mousedown', handleMouseDown)
+      button.addEventListener('mouseup', handleMouseUp)
+      
+      // Clean up
+      return () => {
+        button.removeEventListener('mouseenter', handleMouseEnter)
+        button.removeEventListener('mouseleave', handleMouseLeave)
+        button.removeEventListener('mousedown', handleMouseDown)
+        button.removeEventListener('mouseup', handleMouseUp)
+      }
+    }, [noAnimation])
+    
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
+        ref={mergedRef}
         {...props}
       />
     )

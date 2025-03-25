@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
-import { format } from 'date-fns';
+import { format, isToday } from 'date-fns';
 import { Plus, Calendar as CalendarIcon, ArrowLeft } from 'lucide-react';
+import { gsap } from 'gsap';
 
 // Components
 import CalendarWidget from '@/components/CalendarWidget';
@@ -10,6 +11,7 @@ import BirthdayDetails from '@/components/BirthdayDetails';
 import AddBirthdayForm from '@/components/AddBirthdayForm';
 import EditBirthdayForm from '@/components/EditBirthdayForm';
 import UpcomingBirthdays from '@/components/UpcomingBirthdays';
+import BirthdayPartyLauncher from '@/components/BirthdayPartyLauncher';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
@@ -44,8 +46,115 @@ const CalendarPage: React.FC = () => {
   const [showAddBirthdayForm, setShowAddBirthdayForm] = useState(false);
   const [showEditBirthdayForm, setShowEditBirthdayForm] = useState(false);
   const [birthdayToEdit, setBirthdayToEdit] = useState<BirthdayRecord | null>(null);
+  const [todaysBirthday, setTodaysBirthday] = useState<BirthdayRecord | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Refs for animations
+  const pageRef = useRef<HTMLDivElement>(null);
+  const bgElementsRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const addButtonRef = useRef<HTMLButtonElement>(null);
+  const calendarContainerRef = useRef<HTMLDivElement>(null);
+  const upcomingContainerRef = useRef<HTMLDivElement>(null);
+
+  // Initialize animations when the component mounts
+  useEffect(() => {
+    if (!pageRef.current) return;
+    
+    const timeline = gsap.timeline({ defaults: { ease: 'power2.out' } });
+    
+    // Animate background elements
+    if (bgElementsRef.current) {
+      const bgElements = bgElementsRef.current.children;
+      gsap.set(bgElements, { opacity: 0, scale: 0.8 });
+      timeline.to(bgElements, {
+        opacity: 0.8,
+        scale: 1,
+        duration: 1.5,
+        stagger: 0.3,
+        ease: 'power1.out'
+      }, 0);
+    }
+    
+    // Animate header elements
+    if (headerRef.current) {
+      gsap.set(headerRef.current, { y: -20, opacity: 0 });
+      timeline.to(headerRef.current, { 
+        y: 0, 
+        opacity: 1, 
+        duration: 0.6,
+        ease: 'back.out(1.7)' 
+      }, 0.3);
+    }
+    
+    // Animate title
+    if (titleRef.current) {
+      gsap.set(titleRef.current, { scale: 0.9, opacity: 0 });
+      timeline.to(titleRef.current, { 
+        scale: 1, 
+        opacity: 1, 
+        duration: 0.6,
+        ease: 'back.out(1.7)' 
+      }, 0.5);
+    }
+    
+    // Animate add button
+    if (addButtonRef.current) {
+      gsap.set(addButtonRef.current, { scale: 0, opacity: 0 });
+      timeline.to(addButtonRef.current, { 
+        scale: 1, 
+        opacity: 1, 
+        duration: 0.5,
+        ease: 'back.out(1.7)' 
+      }, 0.7);
+      
+      // Add hover animation for the add button
+      addButtonRef.current.addEventListener('mouseenter', () => {
+        gsap.to(addButtonRef.current, {
+          scale: 1.05,
+          duration: 0.3,
+          ease: 'power1.out'
+        });
+      });
+      
+      addButtonRef.current.addEventListener('mouseleave', () => {
+        gsap.to(addButtonRef.current, {
+          scale: 1,
+          duration: 0.3,
+          ease: 'power1.out'
+        });
+      });
+    }
+    
+    // Animate calendar container (conditional on loading state)
+    if (!loading && calendarContainerRef.current) {
+      gsap.set(calendarContainerRef.current, { y: 30, opacity: 0 });
+      timeline.to(calendarContainerRef.current, { 
+        y: 0, 
+        opacity: 1, 
+        duration: 0.7,
+        ease: 'power2.out' 
+      }, 0.8);
+    }
+    
+    // Animate upcoming birthdays container
+    if (!loading && upcomingContainerRef.current) {
+      gsap.set(upcomingContainerRef.current, { y: 30, opacity: 0 });
+      timeline.to(upcomingContainerRef.current, { 
+        y: 0, 
+        opacity: 1, 
+        duration: 0.7,
+        ease: 'power2.out' 
+      }, 1.0);
+    }
+    
+    return () => {
+      timeline.kill();
+    };
+  }, [loading]); // Re-run when loading state changes
 
   // Fetch birthdays from Supabase
   useEffect(() => {
@@ -82,6 +191,21 @@ const CalendarPage: React.FC = () => {
 
         console.log("Fetched birthdays:", formattedBirthdays);
         setBirthdayRecords(formattedBirthdays);
+        
+        // Check if any birthdays are today
+        const today = new Date();
+        const birthdayToday = formattedBirthdays.find(birthday => {
+          const birthDate = new Date(birthday.date);
+          return birthDate.getMonth() === today.getMonth() && 
+                 birthDate.getDate() === today.getDate();
+        });
+        
+        if (birthdayToday) {
+          setTodaysBirthday(birthdayToday);
+          // Small delay before showing celebration
+          setTimeout(() => setShowCelebration(true), 1000);
+        }
+        
       } catch (error) {
         console.error('Error fetching birthdays:', error);
         toast({
@@ -288,33 +412,57 @@ const CalendarPage: React.FC = () => {
     }
   };
 
+  // Calculate age for today's birthday
+  const calculateAge = (birthDate: Date) => {
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    
+    // Check if birthday has occurred this year
+    if (today.getMonth() < birthDate.getMonth() || 
+        (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return age;
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-100 via-blue-50 to-white p-4 md:p-8 relative overflow-hidden">
+    <div ref={pageRef} className="min-h-screen bg-gradient-to-b from-purple-100 via-blue-50 to-white p-4 md:p-8 relative overflow-hidden">
       {/* Glassmorphic background elements */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+      <div ref={bgElementsRef} className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute -top-64 -right-64 w-[500px] h-[500px] rounded-full bg-purple-300/20 blur-3xl"></div>
         <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] rounded-full bg-blue-300/20 blur-3xl"></div>
         <div className="absolute -bottom-64 -left-64 w-[500px] h-[500px] rounded-full bg-green-300/20 blur-3xl"></div>
       </div>
       
       <div className="max-w-7xl mx-auto relative z-10">
-        <div className="flex justify-between items-center mb-8">
+        <div ref={headerRef} className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-4">
             <Button 
               variant="ghost" 
               size="icon" 
-              onClick={() => navigate('/')}
+              onClick={() => {
+                // Animation before navigation
+                gsap.to(pageRef.current, {
+                  opacity: 0,
+                  y: -20,
+                  duration: 0.4,
+                  ease: 'power2.in',
+                  onComplete: () => navigate('/')
+                });
+              }}
               className="rounded-full hover:bg-purple-100/50 bg-white/30 backdrop-blur-sm border border-white/40"
               aria-label="Back to home"
             >
               <ArrowLeft className="h-5 w-5 text-purple-700" />
             </Button>
-            <h1 className="text-3xl font-bold text-purple-800 flex items-center gap-2 px-4 py-2 bg-white/30 backdrop-blur-sm rounded-full border border-white/40">
+            <h1 ref={titleRef} className="text-3xl font-bold text-purple-800 flex items-center gap-2 px-4 py-2 bg-white/30 backdrop-blur-sm rounded-full border border-white/40">
               <CalendarIcon className="h-8 w-8" />
               Birthday Calendar
             </h1>
           </div>
           <Button 
+            ref={addButtonRef}
             onClick={handleAddBirthday}
             className="bg-purple-600/90 hover:bg-purple-700 backdrop-blur-sm rounded-full px-4"
           >
@@ -328,7 +476,7 @@ const CalendarPage: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
+            <div ref={calendarContainerRef} className="lg:col-span-2">
               <CalendarWidget 
                 birthdays={birthdayRecords.map(record => ({
                   id: record.id,
@@ -347,7 +495,7 @@ const CalendarPage: React.FC = () => {
                 onAddBirthday={handleAddBirthday}
               />
             </div>
-            <div>
+            <div ref={upcomingContainerRef}>
               <UpcomingBirthdays 
                 birthdays={birthdayRecords} 
                 onSelectBirthday={(birthday) => {
@@ -362,7 +510,22 @@ const CalendarPage: React.FC = () => {
       </div>
       
       {/* Birthday Details Dialog */}
-      <Dialog open={showBirthdayDetails} onOpenChange={setShowBirthdayDetails}>
+      <Dialog 
+        open={showBirthdayDetails} 
+        onOpenChange={(open) => {
+          if (!open) {
+            // Animation before closing
+            gsap.to(selectedBirthday ? `.birthday-details-${selectedBirthday.id}` : '.birthday-details', {
+              scale: 0.95,
+              opacity: 0,
+              duration: 0.2,
+              onComplete: () => setShowBirthdayDetails(false)
+            });
+          } else {
+            setShowBirthdayDetails(open);
+          }
+        }}
+      >
         {selectedBirthday && (
           <BirthdayDetails
             isOpen={showBirthdayDetails}
@@ -383,7 +546,22 @@ const CalendarPage: React.FC = () => {
       </Dialog>
       
       {/* Add Birthday Form Dialog */}
-      <Dialog open={showAddBirthdayForm} onOpenChange={setShowAddBirthdayForm}>
+      <Dialog 
+        open={showAddBirthdayForm} 
+        onOpenChange={(open) => {
+          if (!open) {
+            // Animation before closing
+            gsap.to('.add-birthday-form', {
+              scale: 0.95,
+              opacity: 0,
+              duration: 0.2,
+              onComplete: () => setShowAddBirthdayForm(false)
+            });
+          } else {
+            setShowAddBirthdayForm(open);
+          }
+        }}
+      >
         <AddBirthdayForm
           open={showAddBirthdayForm}
           onOpenChange={setShowAddBirthdayForm}
@@ -392,7 +570,22 @@ const CalendarPage: React.FC = () => {
       </Dialog>
 
       {/* Edit Birthday Form Dialog */}
-      <Dialog open={showEditBirthdayForm} onOpenChange={setShowEditBirthdayForm}>
+      <Dialog 
+        open={showEditBirthdayForm} 
+        onOpenChange={(open) => {
+          if (!open) {
+            // Animation before closing
+            gsap.to('.edit-birthday-form', {
+              scale: 0.95,
+              opacity: 0,
+              duration: 0.2,
+              onComplete: () => setShowEditBirthdayForm(false)
+            });
+          } else {
+            setShowEditBirthdayForm(open);
+          }
+        }}
+      >
         {birthdayToEdit && (
           <EditBirthdayForm
             open={showEditBirthdayForm}
@@ -410,6 +603,15 @@ const CalendarPage: React.FC = () => {
           />
         )}
       </Dialog>
+      
+      {/* Birthday Celebration */}
+      {todaysBirthday && showCelebration && (
+        <BirthdayPartyLauncher
+          personName={todaysBirthday.name}
+          age={calculateAge(todaysBirthday.date)}
+          onClose={() => setShowCelebration(false)}
+        />
+      )}
     </div>
   );
 };

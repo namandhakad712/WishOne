@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "./ui/button";
 import { ButtonKwity } from "./ui/button-kwity";
 import {
@@ -18,6 +18,8 @@ import { useSupabase } from "@/contexts/SupabaseContext";
 import { useToast } from "@/components/ui/use-toast";
 import { useRetroMode } from "@/contexts/RetroModeContext";
 import gradientData from "@/lib/gradients.json";
+import { gsap } from "gsap";
+import AnimatedElement from "./AnimatedElement";
 
 interface SettingsDialogProps {
   open: boolean;
@@ -199,6 +201,94 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   const { user } = useSupabase();
   const { toast } = useToast();
   const { setIsRetroMode } = useRetroMode();
+  const [isSaving, setIsSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState("appearance");
+  
+  // Animation refs
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const tabsListRef = useRef<HTMLDivElement>(null);
+  const tabContentRef = useRef<HTMLDivElement>(null);
+  const footerRef = useRef<HTMLDivElement>(null);
+  const settingsItemRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  
+  // Configure animations when the dialog opens
+  useEffect(() => {
+    if (!open || !dialogRef.current) return;
+
+    // Initial animation timeline
+    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+    
+    // Animate header elements
+    if (headerRef.current) {
+      tl.fromTo(
+        headerRef.current.children,
+        { y: -20, opacity: 0 },
+        { y: 0, opacity: 1, stagger: 0.1, duration: 0.4 },
+        0.2
+      );
+    }
+    
+    // Animate tabs list
+    if (tabsListRef.current) {
+      tl.fromTo(
+        tabsListRef.current,
+        { opacity: 0, y: -10 },
+        { opacity: 1, y: 0, duration: 0.4 },
+        0.4
+      );
+    }
+    
+    // Animate footer
+    if (footerRef.current) {
+      tl.fromTo(
+        footerRef.current.children,
+        { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, stagger: 0.1, duration: 0.4 },
+        0.5
+      );
+    }
+    
+    // Return cleanup function
+    return () => {
+      tl.kill();
+    };
+  }, [open]);
+  
+  // Animate tab content when tab changes
+  useEffect(() => {
+    if (!tabContentRef.current) return;
+    
+    // Get all setting items for the active tab
+    const settingItems = Object.values(settingsItemRefs.current).filter(
+      item => item?.dataset.tab === activeTab
+    );
+    
+    if (settingItems.length > 0) {
+      gsap.fromTo(
+        settingItems,
+        { y: 15, opacity: 0 },
+        { 
+          y: 0, 
+          opacity: 1, 
+          stagger: 0.08, 
+          duration: 0.4,
+          ease: 'power2.out',
+          clearProps: 'transform'
+        }
+      );
+    }
+  }, [activeTab]);
+  
+  // Add hover animation to gradient options
+  const animateGradientHover = (element: HTMLElement, isEnter: boolean) => {
+    gsap.to(element, {
+      scale: isEnter ? 1.05 : 1,
+      boxShadow: isEnter ? '0 4px 12px rgba(0,0,0,0.15)' : '0 2px 6px rgba(0,0,0,0.1)',
+      duration: 0.3,
+      ease: 'power2.out'
+    });
+  };
 
   // Load settings from Supabase or localStorage on component mount
   useEffect(() => {
@@ -210,6 +300,21 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
           setSettings(userSettings);
           // Update retro mode when settings are loaded
           setIsRetroMode(userSettings.appearance.retroMode || false);
+          
+          // If no background gradient is set, generate a random one
+          if (!userSettings.appearance?.backgroundGradient) {
+            const randomGradientId = gradientOptions[Math.floor(Math.random() * gradientOptions.length)].id;
+            setSettings(prev => ({
+              ...prev,
+              appearance: {
+                ...prev.appearance,
+                backgroundGradient: randomGradientId
+              }
+            }));
+          }
+        } else {
+          // Apply defaults and save
+          await saveUserSettings(defaultSettings);
         }
       } catch (error) {
         console.error("Error loading settings:", error);
@@ -258,151 +363,130 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
 
   // Save settings to Supabase and localStorage
   const saveSettings = async () => {
-    setIsLoading(true);
+    setIsSaving(true);
+    
     try {
-      if (user) {
-        // If user is logged in, save to Supabase
-        await saveUserSettings(settings);
-      } else {
-        // Otherwise just save to localStorage
-        localStorage.setItem("wishone_settings", JSON.stringify(settings));
+      // Add animation for saving state
+      if (footerRef.current) {
+        gsap.to(footerRef.current.querySelector('.save-button'), {
+          scale: 0.95,
+          duration: 0.2,
+          repeat: 2,
+          yoyo: true
+        });
       }
       
-      setHasChanges(false);
+      await saveUserSettings(settings);
+      
+      // Success animation
       toast({
         title: "Settings saved",
-        description: "Your settings have been saved successfully.",
+        description: "Your preferences have been updated.",
       });
+      
+      // Add a little animation to celebrate saving
+      if (dialogRef.current) {
+        gsap.fromTo(
+          dialogRef.current,
+          { y: 0 },
+          { 
+            y: -5, 
+            duration: 0.1, 
+            repeat: 1, 
+            yoyo: true,
+            ease: 'power2.out' 
+          }
+        );
+      }
+      
+      setTimeout(() => {
       onOpenChange(false);
+      }, 500);
     } catch (error) {
-      console.error("Error saving settings:", error);
       toast({
         title: "Error saving settings",
-        description: "There was a problem saving your settings. Please try again.",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
+    }
+  };
+
+  // Add a ref to a setting item
+  const addSettingItemRef = (element: HTMLDivElement | null, key: string, tab: string) => {
+    if (element) {
+      element.dataset.tab = tab;
+      settingsItemRefs.current[key] = element;
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[85vh] bg-white rounded-xl overflow-hidden flex flex-col">
-        <DialogHeader className="shrink-0">
-          <DialogTitle className="text-2xl font-serif text-primary-emerald">
-            Settings
-          </DialogTitle>
-          <DialogDescription className="text-gray-500">
-            Customize your WishOne experience
-            {user ? " (synced across devices)" : " (stored on this device only)"}
+      <DialogContent 
+        ref={dialogRef}
+        className="max-w-3xl max-h-[90vh] overflow-y-auto"
+      >
+        <div ref={headerRef}>
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Settings</DialogTitle>
+            <DialogDescription>
+              Customize your experience and manage your account preferences.
           </DialogDescription>
         </DialogHeader>
-
-        {isLoading ? (
-          <div className="flex justify-center items-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary-emerald" />
           </div>
-        ) : (
-          <div className="flex flex-col flex-1 overflow-hidden">
-            <Tabs defaultValue="notifications" className="mt-2 flex flex-col h-full overflow-hidden">
-              <TabsList className="grid grid-cols-4 mb-4">
-                <TabsTrigger value="notifications" className="flex flex-col items-center py-2">
-                  <Bell className="h-4 w-4 mb-1 sm:h-5 sm:w-5" />
-                  <span className="text-[10px] sm:text-xs">Notifications</span>
+
+        <div className="mt-6 space-y-6">
+          <div ref={tabsListRef}>
+            <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid grid-cols-4 mb-6">
+                <AnimatedElement type="fadeIn" delay={0.2} duration={0.4}>
+                  <TabsTrigger value="appearance" className="flex items-center gap-2">
+                    <Palette className="h-4 w-4" />
+                    <span className="hidden sm:inline">Appearance</span>
                 </TabsTrigger>
-                <TabsTrigger value="appearance" className="flex flex-col items-center py-2">
-                  <Moon className="h-4 w-4 mb-1 sm:h-5 sm:w-5" />
-                  <span className="text-[10px] sm:text-xs">Appearance</span>
+                </AnimatedElement>
+                
+                <AnimatedElement type="fadeIn" delay={0.3} duration={0.4}>
+                  <TabsTrigger value="notifications" className="flex items-center gap-2">
+                    <Bell className="h-4 w-4" />
+                    <span className="hidden sm:inline">Notifications</span>
                 </TabsTrigger>
-                <TabsTrigger value="calendar" className="flex flex-col items-center py-2">
-                  <Calendar className="h-4 w-4 mb-1 sm:h-5 sm:w-5" />
-                  <span className="text-[10px] sm:text-xs">Calendar</span>
+                </AnimatedElement>
+                
+                <AnimatedElement type="fadeIn" delay={0.4} duration={0.4}>
+                  <TabsTrigger value="calendar" className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    <span className="hidden sm:inline">Calendar</span>
                 </TabsTrigger>
-                <TabsTrigger value="account" className="flex flex-col items-center py-2">
-                  <User className="h-4 w-4 mb-1 sm:h-5 sm:w-5" />
-                  <span className="text-[10px] sm:text-xs">Account</span>
+                </AnimatedElement>
+                
+                <AnimatedElement type="fadeIn" delay={0.5} duration={0.4}>
+                  <TabsTrigger value="account" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    <span className="hidden sm:inline">Account</span>
                 </TabsTrigger>
+                </AnimatedElement>
               </TabsList>
 
-              <div className="overflow-y-auto flex-1 pr-1 -mr-1">
-                {/* Notifications Tab */}
-                <TabsContent value="notifications" className="space-y-3 mt-0 data-[state=active]:flex flex-col">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between space-x-2">
-                      <Label
-                        htmlFor="push-notifications"
-                        className="flex flex-col space-y-1"
-                      >
-                        <span>Push Notifications</span>
-                        <span className="font-normal text-xs text-gray-500">
-                          Receive notifications on your device
-                        </span>
-                      </Label>
-                      <Switch 
-                        id="push-notifications" 
-                        checked={settings.notifications.pushNotifications}
-                        onCheckedChange={(checked) => 
-                          updateSetting("notifications", "pushNotifications", checked)
-                        }
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between space-x-2">
-                      <Label
-                        htmlFor="email-notifications"
-                        className="flex flex-col space-y-1"
-                      >
-                        <span>Email Notifications</span>
-                        <span className="font-normal text-xs text-gray-500">
-                          Receive birthday reminders via email
-                        </span>
-                      </Label>
-                      <Switch 
-                        id="email-notifications" 
-                        checked={settings.notifications.emailNotifications}
-                        onCheckedChange={(checked) => 
-                          updateSetting("notifications", "emailNotifications", checked)
-                        }
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between space-x-2">
-                      <Label
-                        htmlFor="sound-notifications"
-                        className="flex flex-col space-y-1"
-                      >
-                        <span>Sound Notifications</span>
-                        <span className="font-normal text-xs text-gray-500">
-                          Play sounds for notifications
-                        </span>
-                      </Label>
-                      <Switch 
-                        id="sound-notifications" 
-                        checked={settings.notifications.soundNotifications}
-                        onCheckedChange={(checked) => 
-                          updateSetting("notifications", "soundNotifications", checked)
-                        }
-                      />
-                    </div>
-                  </div>
-                </TabsContent>
-
+              <div ref={tabContentRef}>
                 {/* Appearance Tab */}
-                <TabsContent value="appearance" className="space-y-3 mt-0 data-[state=active]:flex flex-col">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between space-x-2">
-                      <Label
-                        htmlFor="dark-mode"
-                        className="flex flex-col space-y-1"
-                      >
-                        <span>Dark Mode</span>
-                        <span className="font-normal text-xs text-gray-500">
-                          Use dark theme for the app
-                        </span>
+                <TabsContent value="appearance" className="space-y-6">
+                  {/* Dark Mode */}
+                  <div 
+                    ref={(el) => addSettingItemRef(el, 'darkMode', 'appearance')} 
+                    className="flex justify-between items-center"
+                  >
+                    <div>
+                      <Label className="text-base flex items-center gap-2">
+                        <Moon className="h-4 w-4" />
+                        Dark Mode
                       </Label>
+                      <p className="text-sm text-gray-500">
+                        Switch to a darker color theme.
+                      </p>
+                    </div>
                       <Switch 
-                        id="dark-mode" 
                         checked={settings.appearance.darkMode}
                         onCheckedChange={(checked) => 
                           updateSetting("appearance", "darkMode", checked)
@@ -410,25 +494,21 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between space-x-2">
-                      <Label
-                        htmlFor="retro-mode"
-                        className="flex flex-col space-y-1"
-                      >
-                        <span className="flex items-center">
-                          <svg className="h-4 w-4 mr-1 text-primary-emerald" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <rect x="3" y="3" width="18" height="18" rx="2" />
-                            <line x1="3" y1="9" x2="21" y2="9" />
-                            <line x1="9" y1="21" x2="9" y2="9" />
-                          </svg>
+                  {/* Retro Mode */}
+                  <div 
+                    ref={(el) => addSettingItemRef(el, 'retroMode', 'appearance')} 
+                    className="flex justify-between items-center"
+                  >
+                    <div>
+                      <Label className="text-base flex items-center gap-2">
+                        <Snowflake className="h-4 w-4" />
                           Retro Mode
-                        </span>
-                        <span className="font-normal text-xs text-gray-500">
-                          Black and white outlined interface
-                        </span>
                       </Label>
+                      <p className="text-sm text-gray-500">
+                        Enable a vintage-inspired interface.
+                      </p>
+                    </div>
                       <Switch 
-                        id="retro-mode" 
                         checked={settings.appearance.retroMode}
                         onCheckedChange={(checked) => 
                           updateSetting("appearance", "retroMode", checked)
@@ -436,21 +516,21 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between space-x-2">
-                      <Label
-                        htmlFor="frost-bg"
-                        className="flex flex-col space-y-1"
+                  {/* Frost Glass Effect */}
+                  <div 
+                    ref={(el) => addSettingItemRef(el, 'frostBg', 'appearance')} 
+                    className="flex justify-between items-center"
                       >
-                        <span className="flex items-center">
-                          <Snowflake className="h-4 w-4 mr-1 text-primary-emerald" />
-                          Frost bg
-                        </span>
-                        <span className="font-normal text-xs text-gray-500">
-                          Add a frosted glass effect to the home screen
-                        </span>
+                    <div>
+                      <Label className="text-base flex items-center gap-2">
+                        <HelpCircle className="h-4 w-4" />
+                        Frost Glass Effect
                       </Label>
+                      <p className="text-sm text-gray-500">
+                        Add a frosted glass overlay to backgrounds.
+                      </p>
+                    </div>
                       <Switch 
-                        id="frost-bg" 
                         checked={settings.appearance.frostBg}
                         onCheckedChange={(checked) => 
                           updateSetting("appearance", "frostBg", checked)
@@ -459,64 +539,121 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                     </div>
 
                     {/* Background Gradient Selection */}
-                    <div className="pt-3 border-t border-gray-100">
-                      <Label className="flex items-center space-x-2 mb-2">
-                        <Palette className="h-5 w-5 text-primary-emerald" />
-                        <span>Background Gradient</span>
-                      </Label>
+                  <div 
+                    ref={(el) => addSettingItemRef(el, 'backgroundGradient', 'appearance')} 
+                    className="space-y-3"
+                  >
+                    <Label className="text-base block mb-1">Background Gradient</Label>
+                    <p className="text-sm text-gray-500 mb-4">
+                      Choose a color theme for your backgrounds.
+                    </p>
                       
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 mt-2">
-                        {gradientOptions.map((gradient) => {
-                          // Generate a random preview for the random option
-                          let previewStyle = gradient.preview;
-                          
-                          if (gradient.id === 'random') {
-                            // Show a random gradient from our JSON file
-                            const randomGradient = generateRandomGradient();
-                            previewStyle = `linear-gradient(135deg, rgb(${randomGradient[0]}) 0%, rgb(${randomGradient[1]}) 100%)`;
-                          }
-                          
-                          return (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                      {gradientOptions.map((gradient) => (
                             <div 
                               key={gradient.id}
-                              className={`
-                                cursor-pointer rounded-lg overflow-hidden border-2 transition-all
-                                ${settings.appearance.backgroundGradient === gradient.id 
-                                  ? 'border-primary-emerald scale-105 shadow-md' 
-                                  : 'border-transparent hover:border-gray-200'}
-                              `}
-                              onClick={() => updateSetting("appearance", "backgroundGradient", gradient.id)}
+                          className={`rounded-lg overflow-hidden border-2 cursor-pointer transition-shadow duration-300 ${
+                            settings.appearance.backgroundGradient === gradient.id
+                              ? "border-purple-500 shadow-md"
+                              : "border-transparent"
+                          }`}
+                          onClick={() =>
+                            updateSetting(
+                              "appearance",
+                              "backgroundGradient",
+                              gradient.id
+                            )
+                          }
+                          onMouseEnter={(e) => animateGradientHover(e.currentTarget, true)}
+                          onMouseLeave={(e) => animateGradientHover(e.currentTarget, false)}
                             >
                               <div 
-                                className="h-12 sm:h-16 w-full" 
-                                style={{ background: previewStyle }}
-                              />
-                              <div className="text-[10px] sm:text-xs text-center py-1 px-1 truncate">
+                            className="h-20 w-full"
+                            style={{ background: gradient.preview }}
+                          ></div>
+                          <div className="p-2 bg-white text-center text-xs font-medium">
                                 {gradient.name}
                               </div>
                             </div>
-                          );
-                        })}
-                      </div>
+                      ))}
                     </div>
                   </div>
                 </TabsContent>
 
+                {/* Notifications Tab */}
+                <TabsContent value="notifications" className="space-y-6">
+                  {/* Push Notifications */}
+                  <div 
+                    ref={(el) => addSettingItemRef(el, 'pushNotifications', 'notifications')} 
+                    className="flex justify-between items-center"
+                  >
+                    <div>
+                      <Label className="text-base">Push Notifications</Label>
+                      <p className="text-sm text-gray-500">
+                        Receive notifications for important events.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.notifications.pushNotifications}
+                      onCheckedChange={(checked) =>
+                        updateSetting("notifications", "pushNotifications", checked)
+                      }
+                    />
+                  </div>
+
+                  {/* Email Notifications */}
+                  <div 
+                    ref={(el) => addSettingItemRef(el, 'emailNotifications', 'notifications')} 
+                    className="flex justify-between items-center"
+                  >
+                    <div>
+                      <Label className="text-base">Email Notifications</Label>
+                      <p className="text-sm text-gray-500">
+                        Get updates and reminders via email.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.notifications.emailNotifications}
+                      onCheckedChange={(checked) =>
+                        updateSetting("notifications", "emailNotifications", checked)
+                      }
+                    />
+                  </div>
+
+                  {/* Sound Notifications */}
+                  <div 
+                    ref={(el) => addSettingItemRef(el, 'soundNotifications', 'notifications')} 
+                    className="flex justify-between items-center"
+                  >
+                    <div>
+                      <Label className="text-base">Sound Notifications</Label>
+                      <p className="text-sm text-gray-500">
+                        Play a sound for incoming notifications.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.notifications.soundNotifications}
+                      onCheckedChange={(checked) =>
+                        updateSetting("notifications", "soundNotifications", checked)
+                      }
+                    />
+                  </div>
+                </TabsContent>
+
                 {/* Calendar Tab */}
-                <TabsContent value="calendar" className="space-y-3 mt-0 data-[state=active]:flex flex-col">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between space-x-2">
-                      <Label
-                        htmlFor="google-calendar"
-                        className="flex flex-col space-y-1"
-                      >
-                        <span>Google Calendar</span>
-                        <span className="font-normal text-xs text-gray-500">
-                          Sync birthdays with Google Calendar
-                        </span>
-                      </Label>
+                <TabsContent value="calendar" className="space-y-6">
+                  {/* Google Calendar Integration */}
+                  <div 
+                    ref={(el) => addSettingItemRef(el, 'googleCalendar', 'calendar')} 
+                    className="flex justify-between items-center"
+                  >
+                    <div>
+                      <Label className="text-base">Google Calendar Integration</Label>
+                      <p className="text-sm text-gray-500">
+                        Sync birthdays with your Google Calendar.
+                      </p>
+                    </div>
                       <Switch 
-                        id="google-calendar" 
                         checked={settings.calendar.googleCalendar}
                         onCheckedChange={(checked) => 
                           updateSetting("calendar", "googleCalendar", checked)
@@ -524,91 +661,122 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between space-x-2">
-                      <Label
-                        htmlFor="default-reminder"
-                        className="flex flex-col space-y-1"
+                  {/* Default Reminder */}
+                  <div 
+                    ref={(el) => addSettingItemRef(el, 'defaultReminder', 'calendar')} 
+                    className="space-y-3"
                       >
-                        <span>Default Reminder</span>
-                        <span className="font-normal text-xs text-gray-500">
-                          Set default reminder days before birthdays
-                        </span>
-                      </Label>
+                    <Label className="text-base block">Default Reminder Time</Label>
+                    <p className="text-sm text-gray-500">
+                      When to remind you of upcoming birthdays.
+                    </p>
                       <select 
-                        className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
                         value={settings.calendar.defaultReminder}
-                        onChange={(e) => updateSetting("calendar", "defaultReminder", e.target.value)}
+                      onChange={(e) =>
+                        updateSetting("calendar", "defaultReminder", e.target.value)
+                      }
+                      className="w-full p-2 rounded-md border bg-white/90"
                       >
-                        <option value="1">1 day before</option>
-                        <option value="3">3 days before</option>
-                        <option value="7">1 week before</option>
-                        <option value="14">2 weeks before</option>
-                        <option value="30">1 month before</option>
+                      <option value="same-day">Same day</option>
+                      <option value="1-day">1 day before</option>
+                      <option value="3-days">3 days before</option>
+                      <option value="1-week">1 week before</option>
+                      <option value="2-weeks">2 weeks before</option>
                       </select>
                     </div>
 
-                    <div className="flex items-center justify-between space-x-2">
-                      <Label
-                        htmlFor="week-start"
-                        className="flex flex-col space-y-1"
-                      >
-                        <span>Week Starts On</span>
-                        <span className="font-normal text-xs text-gray-500">
-                          Set the first day of the week
-                        </span>
-                      </Label>
+                  {/* Week Start */}
+                  <div 
+                    ref={(el) => addSettingItemRef(el, 'weekStart', 'calendar')} 
+                    className="space-y-3"
+                  >
+                    <Label className="text-base block">Week Start</Label>
+                    <p className="text-sm text-gray-500">
+                      Choose the first day of the week.
+                    </p>
                       <select 
-                        className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
                         value={settings.calendar.weekStart}
-                        onChange={(e) => updateSetting("calendar", "weekStart", e.target.value)}
+                      onChange={(e) =>
+                        updateSetting("calendar", "weekStart", e.target.value)
+                      }
+                      className="w-full p-2 rounded-md border bg-white/90"
                       >
+                      <option value="monday">Monday</option>
                         <option value="sunday">Sunday</option>
-                        <option value="monday">Monday</option>
+                      <option value="saturday">Saturday</option>
                       </select>
-                    </div>
                   </div>
                 </TabsContent>
 
                 {/* Account Tab */}
-                <TabsContent value="account" className="space-y-3 mt-0 data-[state=active]:flex flex-col">
-                  <div className="space-y-3">
-                    <div className="mb-4">
-                      <img 
-                        src="https://media.istockphoto.com/id/1628017363/vector/one-continuous-line-drawing-of-hand-holding-butterfly-beautiful-flying-moth-for-wellbeing.jpg?s=612x612&w=0&k=20&c=kBF-udx3QJU1sH-BZba01tGaj-4JySpsWDmbTvKuP5w=" 
-                        alt="Profile" 
-                        className="w-full h-38 rounded-xl object-cover border-2 border-white shadow-md" 
-                      />
+                <TabsContent value="account" className="space-y-6">
+                  <div 
+                    ref={(el) => addSettingItemRef(el, 'accountInfo', 'account')} 
+                    className="space-y-3"
+                  >
+                    <Label className="text-base block">Account Information</Label>
+                    <p className="text-sm text-gray-500">
+                      Manage your account settings and preferences.
+                    </p>
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <p className="text-sm mb-2">
+                        <strong>Email:</strong> {user?.email}
+                      </p>
+                      <p className="text-sm mb-2">
+                        <strong>Account created:</strong>{" "}
+                        {user?.created_at
+                          ? new Date(user.created_at).toLocaleDateString()
+                          : "Unknown"}
+                      </p>
+                      <Button
+                        variant="outline"
+                        className="mt-2 text-sm"
+                        onClick={() => onOpenChange(false)}
+                      >
+                        <User className="h-4 w-4 mr-2" />
+                        Edit Profile
+                      </Button>
+                    </div>
                     </div>
                   
-                    <div className="mt-4">
-                      <ButtonKwity 
-                        variant="emerald" 
-                        className="w-full"
-                        onClick={() => window.open('/help', '_blank')}
-                      >
-                        <HelpCircle className="mr-2 h-4 w-4" />
-                        Help Center
-                      </ButtonKwity>
+                  <div 
+                    ref={(el) => addSettingItemRef(el, 'privacy', 'account')} 
+                    className="space-y-3"
+                  >
+                    <Label className="text-base block flex items-center gap-2">
+                      <Shield className="h-4 w-4" />
+                      Privacy & Security
+                    </Label>
+                    <p className="text-sm text-gray-500">
+                      Manage your data and privacy settings.
+                    </p>
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <p className="text-sm">
+                        Your data is stored securely and never shared with third parties
+                        without your consent.
+                      </p>
                     </div>
                   </div>
                 </TabsContent>
               </div>
             </Tabs>
+          </div>
+        </div>
 
-            <DialogFooter className="mt-4 shrink-0 border-t border-gray-100 pt-3">
-              <Button
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                className="mr-2"
-              >
+        <DialogFooter ref={footerRef}>
+          <AnimatedElement type="fadeIn" delay={0.6} duration={0.4}>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
+          </AnimatedElement>
+          
+          <AnimatedElement type="fadeIn" delay={0.7} duration={0.4}>
               <ButtonKwity
                 onClick={saveSettings}
-                disabled={!hasChanges || isLoading}
-                variant="emerald"
+              disabled={isSaving}
+              className="save-button"
               >
-                {isLoading ? (
+              {isSaving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Saving...
@@ -617,9 +785,8 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                   "Save Changes"
                 )}
               </ButtonKwity>
+          </AnimatedElement>
             </DialogFooter>
-          </div>
-        )}
       </DialogContent>
     </Dialog>
   );

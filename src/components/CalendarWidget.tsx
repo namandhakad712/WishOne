@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   format,
   addMonths,
@@ -33,6 +33,7 @@ import {
   Edit,
   Trash2,
 } from "lucide-react";
+import { gsap } from "gsap";
 
 interface Birthday {
   id: string;
@@ -130,13 +131,196 @@ const CalendarWidget = ({
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date(),
   );
+  
+  // Refs for GSAP animations
+  const calendarRef = useRef<HTMLDivElement>(null);
+  const monthControlsRef = useRef<HTMLDivElement>(null);
+  const monthTextRef = useRef<HTMLSpanElement>(null);
+  const calendarContainerRef = useRef<HTMLDivElement>(null);
+  const upcomingContainerRef = useRef<HTMLDivElement>(null);
+  const upcomingItemsRef = useRef<HTMLDivElement>(null);
+  
+  // Initialize animations when component mounts
+  useEffect(() => {
+    if (!calendarRef.current) return;
+    
+    const timeline = gsap.timeline({ defaults: { ease: 'power2.out' } });
+    
+    // Initial animation for calendar container
+    gsap.set(calendarRef.current, { opacity: 0, y: 20 });
+    timeline.to(calendarRef.current, {
+      opacity: 1,
+      y: 0,
+      duration: 0.6,
+      ease: 'back.out(1.2)'
+    });
+    
+    // Animate month controls
+    if (monthControlsRef.current) {
+      const controls = monthControlsRef.current.querySelectorAll('button');
+      gsap.set(controls, { scale: 0.8, opacity: 0 });
+      timeline.to(controls, {
+        scale: 1,
+        opacity: 1,
+        duration: 0.4,
+        stagger: 0.1,
+        ease: 'back.out(2)'
+      }, 0.3);
+    }
+    
+    // Animate month text
+    if (monthTextRef.current) {
+      gsap.set(monthTextRef.current, { opacity: 0, y: -10 });
+      timeline.to(monthTextRef.current, {
+        opacity: 1,
+        y: 0,
+        duration: 0.4,
+        ease: 'power2.out'
+      }, 0.4);
+    }
+    
+    // Animate the calendar container
+    if (calendarContainerRef.current) {
+      gsap.set(calendarContainerRef.current, { opacity: 0, scale: 0.97 });
+      timeline.to(calendarContainerRef.current, {
+        opacity: 1,
+        scale: 1,
+        duration: 0.5,
+        ease: 'power2.out'
+      }, 0.5);
+    }
+    
+    // Animate upcoming birthdays container
+    if (upcomingContainerRef.current) {
+      gsap.set(upcomingContainerRef.current, { opacity: 0, x: 20 });
+      timeline.to(upcomingContainerRef.current, {
+        opacity: 1,
+        x: 0,
+        duration: 0.5,
+        ease: 'power2.out'
+      }, 0.6);
+    }
+    
+    // Add staggered animation to upcoming birthday items
+    if (upcomingItemsRef.current) {
+      const items = upcomingItemsRef.current.children;
+      gsap.set(items, { opacity: 0, y: 15 });
+      timeline.to(items, {
+        opacity: 1,
+        y: 0,
+        duration: 0.4,
+        stagger: 0.1,
+        ease: 'power2.out'
+      }, 0.8);
+    }
+    
+    // Setup hover animations for days with birthdays
+    setupDayHoverAnimations();
+    
+    return () => {
+      timeline.kill();
+    };
+  }, []);
+  
+  // Function to setup hover animations for calendar days with birthdays
+  const setupDayHoverAnimations = () => {
+    if (!calendarContainerRef.current) return;
+    
+    // Wait briefly for the calendar to render
+    setTimeout(() => {
+      // Find all days with birthdays (they should have our birthday modifier class)
+      const birthdayDays = calendarContainerRef.current.querySelectorAll('[class*="birthday"]');
+      
+      birthdayDays.forEach(day => {
+        day.addEventListener('mouseenter', () => {
+          gsap.to(day, {
+            scale: 1.15,
+            duration: 0.3,
+            ease: 'power1.out',
+            zIndex: 10
+          });
+        });
+        
+        day.addEventListener('mouseleave', () => {
+          gsap.to(day, {
+            scale: 1,
+            duration: 0.3,
+            ease: 'power1.out',
+            zIndex: 1
+          });
+        });
+      });
+    }, 500);
+  };
 
   const handlePreviousMonth = () => {
-    setCurrentMonth((prevMonth) => subMonths(prevMonth, 1));
+    // Animate out current month
+    if (calendarContainerRef.current) {
+      gsap.to(calendarContainerRef.current, {
+        opacity: 0,
+        x: 50,
+        duration: 0.3,
+        ease: 'power2.in',
+        onComplete: () => {
+          // Change month
+          setCurrentMonth((prevMonth) => subMonths(prevMonth, 1));
+          
+          // Animate in new month
+          gsap.fromTo(calendarContainerRef.current, 
+            { opacity: 0, x: -50 },
+            { opacity: 1, x: 0, duration: 0.4, ease: 'power2.out' }
+          );
+          
+          // Update month text with animation
+          if (monthTextRef.current) {
+            gsap.fromTo(monthTextRef.current,
+              { opacity: 0, y: -10 },
+              { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out', delay: 0.1 }
+            );
+          }
+          
+          // Re-setup hover animations after calendar updates
+          setTimeout(setupDayHoverAnimations, 300);
+        }
+      });
+    } else {
+      setCurrentMonth((prevMonth) => subMonths(prevMonth, 1));
+    }
   };
 
   const handleNextMonth = () => {
-    setCurrentMonth((prevMonth) => addMonths(prevMonth, 1));
+    // Animate out current month
+    if (calendarContainerRef.current) {
+      gsap.to(calendarContainerRef.current, {
+        opacity: 0,
+        x: -50,
+        duration: 0.3,
+        ease: 'power2.in',
+        onComplete: () => {
+          // Change month
+          setCurrentMonth((prevMonth) => addMonths(prevMonth, 1));
+          
+          // Animate in new month
+          gsap.fromTo(calendarContainerRef.current, 
+            { opacity: 0, x: 50 },
+            { opacity: 1, x: 0, duration: 0.4, ease: 'power2.out' }
+          );
+          
+          // Update month text with animation
+          if (monthTextRef.current) {
+            gsap.fromTo(monthTextRef.current,
+              { opacity: 0, y: -10 },
+              { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out', delay: 0.1 }
+            );
+          }
+          
+          // Re-setup hover animations after calendar updates
+          setTimeout(setupDayHoverAnimations, 300);
+        }
+      });
+    } else {
+      setCurrentMonth((prevMonth) => addMonths(prevMonth, 1));
+    }
   };
 
   const handleDateSelect = (date: Date | undefined) => {
@@ -145,7 +329,29 @@ const CalendarWidget = ({
       (birthday) => date && isSameDay(ensureDate(birthday.date), date),
     );
     if (birthdayOnDate) {
-      onSelectBirthday(birthdayOnDate);
+      // Animate the selection before calling the callback
+      if (calendarContainerRef.current) {
+        const selectedDay = calendarContainerRef.current.querySelector('[aria-selected="true"]');
+        if (selectedDay) {
+          gsap.to(selectedDay, {
+            scale: 1.2,
+            duration: 0.2,
+            ease: 'back.out(2)',
+            onComplete: () => {
+              gsap.to(selectedDay, {
+                scale: 1,
+                duration: 0.3,
+                ease: 'power2.out',
+                onComplete: () => onSelectBirthday(birthdayOnDate)
+              });
+            }
+          });
+        } else {
+          onSelectBirthday(birthdayOnDate);
+        }
+      } else {
+        onSelectBirthday(birthdayOnDate);
+      }
     }
   };
 
@@ -229,7 +435,7 @@ const CalendarWidget = ({
   };
 
   return (
-    <div className="bg-white/30 backdrop-blur-md rounded-xl shadow-lg p-6 w-full max-w-[700px] h-auto flex flex-col border border-white/40 relative overflow-hidden">
+    <div ref={calendarRef} className="bg-white/30 backdrop-blur-md rounded-xl shadow-lg p-6 w-full max-w-[700px] h-auto flex flex-col border border-white/40 relative overflow-hidden">
       {/* Glassmorphic background elements */}
       <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-purple-300/20 blur-2xl"></div>
       <div className="absolute -bottom-24 -left-24 w-96 h-96 rounded-full bg-green-300/20 blur-2xl"></div>
@@ -238,7 +444,7 @@ const CalendarWidget = ({
         <h2 className="text-2xl font-semibold text-purple-800">
           Birthday Calendar
         </h2>
-        <div className="flex space-x-2">
+        <div ref={monthControlsRef} className="flex space-x-2">
           <Button
             variant="outline"
             size="icon"
@@ -247,7 +453,7 @@ const CalendarWidget = ({
           >
             <ChevronLeft className="h-5 w-5 text-purple-600" />
           </Button>
-          <span className="text-lg font-medium text-gray-700 flex items-center px-3 py-1 bg-white/50 backdrop-blur-sm rounded-full border border-white/40">
+          <span ref={monthTextRef} className="text-lg font-medium text-gray-700 flex items-center px-3 py-1 bg-white/50 backdrop-blur-sm rounded-full border border-white/40">
             {format(currentMonth, "MMMM yyyy")}
           </span>
           <Button
@@ -262,7 +468,7 @@ const CalendarWidget = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6 flex-1 relative z-10">
-        <div className="md:col-span-3 bg-white/40 backdrop-blur-sm rounded-xl p-4 border border-white/40 shadow-sm">
+        <div ref={calendarContainerRef} className="md:col-span-3 bg-white/40 backdrop-blur-sm rounded-xl p-4 border border-white/40 shadow-sm">
           <Calendar
             mode="single"
             selected={selectedDate}
@@ -304,7 +510,7 @@ const CalendarWidget = ({
           />
         </div>
 
-        <div className="md:col-span-2">
+        <div ref={upcomingContainerRef} className="md:col-span-2">
           <Card className="h-full border-white/40 bg-white/40 backdrop-blur-sm shadow-sm">
             <CardHeader>
               <CardTitle className="text-purple-800 flex justify-between items-center">
@@ -313,12 +519,28 @@ const CalendarWidget = ({
             </CardHeader>
             <CardContent className="overflow-auto max-h-[300px]">
               {upcomingBirthdays.length > 0 ? (
-                <div className="space-y-3">
+                <div ref={upcomingItemsRef} className="space-y-3">
                   {upcomingBirthdays.map((birthday) => (
                     <div
                       key={birthday.id}
-                      className="p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                      onClick={() => onSelectBirthday(birthday)}
+                      className="p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => {
+                        // Animation on click
+                        gsap.to(`#birthday-item-${birthday.id}`, {
+                          scale: 0.97,
+                          duration: 0.2,
+                          ease: 'power1.out',
+                          onComplete: () => {
+                            gsap.to(`#birthday-item-${birthday.id}`, {
+                              scale: 1,
+                              duration: 0.3,
+                              ease: 'back.out(1.5)',
+                              onComplete: () => onSelectBirthday(birthday)
+                            });
+                          }
+                        });
+                      }}
+                      id={`birthday-item-${birthday.id}`}
                     >
                       <div className="flex justify-between items-start">
                         <div>
@@ -340,6 +562,22 @@ const CalendarWidget = ({
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7 text-purple-600 hover:text-purple-800 hover:bg-purple-100"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Button press animation
+                              gsap.to(e.currentTarget, {
+                                scale: 0.9,
+                                duration: 0.1,
+                                ease: 'power1.out',
+                                onComplete: () => {
+                                  gsap.to(e.currentTarget, {
+                                    scale: 1,
+                                    duration: 0.2,
+                                    ease: 'back.out(3)'
+                                  });
+                                }
+                              });
+                            }}
                           >
                             <Phone className="h-4 w-4" />
                           </Button>
@@ -347,6 +585,22 @@ const CalendarWidget = ({
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7 text-purple-600 hover:text-purple-800 hover:bg-purple-100"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Button press animation
+                              gsap.to(e.currentTarget, {
+                                scale: 0.9,
+                                duration: 0.1,
+                                ease: 'power1.out',
+                                onComplete: () => {
+                                  gsap.to(e.currentTarget, {
+                                    scale: 1,
+                                    duration: 0.2,
+                                    ease: 'back.out(3)'
+                                  });
+                                }
+                              });
+                            }}
                           >
                             <MessageSquare className="h-4 w-4" />
                           </Button>

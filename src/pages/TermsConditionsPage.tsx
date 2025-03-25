@@ -35,102 +35,97 @@ const TermsConditionsPage = () => {
           <div className="container mx-auto max-w-3xl">
             <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/40 p-6 prose prose-purple max-w-none">
               <h2 className="text-xl font-semibold text-purple-800 mb-4">WishOne Terms and Conditions</h2>
-              <p className="text-gray-700 mb-6">Last Updated: {new Date().toLocaleDateString()}</p>
+              <p className="text-gray-700 mb-6">Last Updated: March 24, 2025</p>
 
               <section className="mb-6">
-                <h3 className="text-lg font-medium text-purple-700 mb-2">1. Introduction</h3>
-                <p>Welcome to WishOne! These Terms and Conditions govern your use of the WishOne application and services (the "Service"). By using our Service, you agree to these terms. Please read them carefully.</p>
-                <p>WishOne is a personal assistant application designed to help you remember important dates, create personalized messages, and provide AI-powered conversation.</p>
+                <h3 className="text-lg font-medium text-purple-700 mb-2">1. Hey, Welcome to WishOne!</h3>
+                <p>Hi there! These Terms and Conditions are just our way of saying how WishOne works and what you can expect. By using the app, you're cool with these terms—and don't worry, they're pretty straightforward.</p>
+                <p>WishOne is a chill little project to help you remember dates, craft fun messages, or chat with an AI if we toss that in. It's all about good vibes, no pressure.</p>
               </section>
 
               <section className="mb-6">
-                <h3 className="text-lg font-medium text-purple-700 mb-2">2. Using Our Service</h3>
-                <p>When using WishOne, you agree to:</p>
+                <h3 className="text-lg font-medium text-purple-700 mb-2">2. Using WishOne</h3>
+                <p>We want you to enjoy WishOne your way. Here's the deal:</p>
                 <ul className="list-disc pl-6 mb-4">
-                  <li>Provide accurate information about yourself and others you add to the Service</li>
-                  <li>Use the Service only for lawful purposes and in accordance with these Terms</li>
-                  <li>Not use the Service in any way that could harm the Service or impair others' use of the Service</li>
-                  <li>Not attempt to gain unauthorized access to any part of the Service</li>
+                  <li>Use it for fun, legal stuff—nothing shady, okay?</li>
+                  <li>Don't mess with the app or try to break it (we're all friends here).</li>
+                  <li>If you're not playing nice, we might have to pause your access—but we'd rather not.</li>
                 </ul>
-                <p>We reserve the right to terminate or restrict your access to the Service if you violate these Terms.</p>
+                <p>That's it! No big rules, just keep it cool.</p>
               </section>
 
               <section className="mb-6">
-                <h3 className="text-lg font-medium text-purple-700 mb-2">3. Your Content</h3>
-                <p>Our Service allows you to store and share various content such as:</p>
+                <h3 className="text-lg font-medium text-purple-700 mb-2">3. Your Stuff</h3>
+                <p>You can add whatever you like to WishOne—birthdays, messages, pics, whatever inspires you. It's all yours:</p>
                 <ul className="list-disc pl-6 mb-4">
-                  <li>Personal information (such as birthdays, relationships, etc.)</li>
-                  <li>Messages and conversations</li>
-                  <li>Images and other media</li>
+                  <li>You own what you put in. We're not claiming it.</li>
+                  <li>If you add something, we'll only use it to make the app work for you (like showing you what you saved).</li>
+                  <li>You're in charge of what you share—make sure it's yours to use!</li>
                 </ul>
-                <p>You retain all rights to your content. By uploading or otherwise providing content to our Service, you grant us a license to use, store, and display that content in connection with providing the Service to you.</p>
-                <p>You are solely responsible for the content you provide, and you represent that you have all necessary rights to that content.</p>
+                <p>Since we don't collect or store anything long-term, it's all on your device anyway.</p>
               </section>
 
               <section className="mb-6">
-                <h3 className="text-lg font-medium text-purple-700 mb-2">4. Privacy and Data</h3>
-                <p>Your privacy matters to us. Our use of your personal information is governed by our <a href="/privacy" className="text-purple-600 hover:text-purple-800 underline">Privacy Policy</a>.</p>
-                <p>Please note that some features of WishOne may require integration with third-party services (such as Google's Gemini AI). Your use of these integrations may be subject to additional terms and privacy policies.</p>
+                <h3 className="text-lg font-medium text-purple-700 mb-2">4. Privacy Stuff</h3>
+                <p>We're not into grabbing your data—check out our <a href="/privacy" className="text-purple-600 hover:text-purple-800 underline">Privacy Policy</a> for the full scoop. If we ever add a feature (like an AI chat with Google's Gemini), it might come with its own simple terms from them, but we'll keep you posted. No surprises here!</p>
               </section>
 
               <section className="mb-6">
-                <h3 className="text-lg font-medium text-purple-700 mb-2">5. AI Features</h3>
-                <p>WishOne uses artificial intelligence to enhance your experience. Please be aware that:</p>
+                <h3 className="text-lg font-medium text-purple-700 mb-2">5. AI (If We Add It)</h3>
+                <p>If we throw in an AI buddy, here's how it rolls:</p>
                 <ul className="list-disc pl-6 mb-4">
-                  <li>AI-generated content may not always be accurate or appropriate</li>
-                  <li>You should review any AI-generated content before using it</li>
-                  <li>We are not responsible for decisions you make based on AI-generated suggestions</li>
-                </ul>
-                <p>Our AI features are designed to assist and inspire you, not to replace human judgment.</p>
-              </section>
-
-              <section className="mb-6">
-                <h3 className="text-lg font-medium text-purple-700 mb-2">6. Changes to Our Service</h3>
-                <p>We are constantly improving our Service. As such, we may:</p>
-                <ul className="list-disc pl-6 mb-4">
-                  <li>Add or remove features or functionality</li>
-                  <li>Suspend or discontinue the Service entirely</li>
-                  <li>Update the Service to address security concerns or improve performance</li>
-                </ul>
-                <p>We will make reasonable efforts to notify you of significant changes to the Service.</p>
-              </section>
-
-              <section className="mb-6">
-                <h3 className="text-lg font-medium text-purple-700 mb-2">7. Disclaimer of Warranties</h3>
-                <p>WishOne is provided "as is" and "as available" without any warranties of any kind, either express or implied. We do not guarantee that:</p>
-                <ul className="list-disc pl-6 mb-4">
-                  <li>The Service will always be available or error-free</li>
-                  <li>Any errors or defects will be corrected</li>
-                  <li>The Service is free of viruses or other harmful components</li>
-                </ul>
-                <p>To the fullest extent permitted by law, we disclaim all warranties, including but not limited to warranties of merchantability, fitness for a particular purpose, and non-infringement.</p>
-              </section>
-
-              <section className="mb-6">
-                <h3 className="text-lg font-medium text-purple-700 mb-2">8. Limitation of Liability</h3>
-                <p>To the maximum extent permitted by law, we shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to loss of profits, data, use, or other intangible losses, resulting from:</p>
-                <ul className="list-disc pl-6 mb-4">
-                  <li>Your use or inability to use the Service</li>
-                  <li>Any unauthorized access to or use of our servers and/or any personal information stored therein</li>
-                  <li>Any interruption or cessation of transmission to or from the Service</li>
+                  <li>It's there to help with ideas or chats—might not be perfect, though!</li>
+                  <li>Double-check anything it suggests before you run with it.</li>
+                  <li>We're not on the hook if you base big decisions on it—it's just a fun tool, not a life coach.</li>
                 </ul>
               </section>
 
               <section className="mb-6">
-                <h3 className="text-lg font-medium text-purple-700 mb-2">9. Changes to Terms</h3>
-                <p>We may modify these Terms at any time. If we make changes, we will provide notice by:</p>
+                <h3 className="text-lg font-medium text-purple-700 mb-2">6. Changes to WishOne</h3>
+                <p>We're always tinkering to make WishOne better. That might mean:</p>
                 <ul className="list-disc pl-6 mb-4">
-                  <li>Posting the updated Terms on our website</li>
-                  <li>Updating the "Last Updated" date at the top of these Terms</li>
-                  <li>Providing notification within the Service</li>
+                  <li>Adding cool new stuff or trimming things that don't work.</li>
+                  <li>Pausing the app if we need to fix something big.</li>
+                  <li>Updating it to keep it running smooth.</li>
                 </ul>
-                <p>Your continued use of the Service after any changes to the Terms constitutes your acceptance of the new Terms.</p>
+                <p>We'll give you a heads-up if anything major shifts.</p>
               </section>
 
               <section className="mb-6">
-                <h3 className="text-lg font-medium text-purple-700 mb-2">10. Contact Us</h3>
-                <p>If you have any questions about these Terms, please contact us at:</p>
-                <p className="font-medium">support@wishone.app</p>
+                <h3 className="text-lg font-medium text-purple-700 mb-2">7. No Promises (It's "As Is")</h3>
+                <p>WishOne is here for you to enjoy as it is. We're not making big guarantees:</p>
+                <ul className="list-disc pl-6 mb-4">
+                  <li>It might glitch sometimes (we'll try to fix it if it does).</li>
+                  <li>No promises it's perfect or virus-free (but we're keeping it clean).</li>
+                </ul>
+                <p>We just want you to have fun with it, no stress.</p>
+              </section>
+
+              <section className="mb-6">
+                <h3 className="text-lg font-medium text-purple-700 mb-2">8. Liability (Keeping It Real)</h3>
+                <p>If something goes sideways, we're not liable for stuff like:</p>
+                <ul className="list-disc pl-6 mb-4">
+                  <li>If the app's down and you can't use it.</li>
+                  <li>Any weird losses (profits, data, etc.) from using it.</li>
+                </ul>
+                <p>It's a free, open project—use it at your own pace, no worries.</p>
+              </section>
+
+              <section className="mb-6">
+                <h3 className="text-lg font-medium text-purple-700 mb-2">9. Updating These Terms</h3>
+                <p>If we tweak these terms (say, for a new feature), we'll:</p>
+                <ul className="list-disc pl-6 mb-4">
+                  <li>Pop the new version here.</li>
+                  <li>Update the "Last Updated" date up top.</li>
+                  <li>Maybe nudge you in the app.</li>
+                </ul>
+                <p>Keep using WishOne, and you're good with the changes. Simple!</p>
+              </section>
+
+              <section className="mb-6">
+                <h3 className="text-lg font-medium text-purple-700 mb-2">10. Say Hi!</h3>
+                <p>Questions? Thoughts? Contact us at the <strong>"App Support" form in the /help page</strong>.</p>
+                <p>That's it—WishOne is your playground. Enjoy it, and let's keep the good times rolling!</p>
               </section>
             </div>
           </div>
