@@ -7,7 +7,6 @@ import WelcomeWindow from "./components/WelcomeWindow";
 import LoginPage from "./pages/LoginPage";
 import HelpPage from "./pages/HelpPage";
 import CalendarPage from "./pages/CalendarPage";
-import AnimationDemo from "./pages/AnimationDemo";
 import { ProtectedRoute } from "./components/Auth/ProtectedRoute";
 import { Toaster } from "./components/ui/toaster";
 import { SupabaseStatus } from "./components/SupabaseStatus";
@@ -20,6 +19,7 @@ import { RetroModeProvider } from "@/contexts/RetroModeContext";
 import { GSAPProvider } from "./contexts/GSAPContext";
 import TermsConditionsPage from "./pages/TermsConditionsPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import StructureOfProject from "./pages/StructureOfProject";
 
 function App() {
   const [showWelcome, setShowWelcome] = useState(false);
@@ -54,10 +54,10 @@ function App() {
               <Route path="/" element={<HomeScreen />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/help" element={<HelpPage />} />
-              <Route path="/animations" element={<AnimationDemo />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/terms" element={<TermsConditionsPage />} />
               <Route path="/privacy" element={<PrivacyPolicyPage />} />
+              <Route path="/structureofprojectbynaman" element={<StructureOfProject />} />
               
               {/* Protected routes */}
               <Route element={<ProtectedRoute />}>
