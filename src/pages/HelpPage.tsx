@@ -60,6 +60,12 @@ const HelpPage: React.FC = () => {
       icon: <Calendar className="h-5 w-5" />
     },
     {
+      question: "How do I delete a birthday?",
+      answer: "To delete a birthday, go to the birthday details page, tap the menu icon (three dots) in the top right, and select 'Delete'. Confirm your choice when prompted.",
+      category: "Birthdays",
+      icon: <Calendar className="h-5 w-5" />
+    },
+    {
       question: "How do I change the app theme?",
       answer: "To change the app theme, go to your profile page and tap 'Settings'. Under the 'Appearance' tab, you can select different background gradients or enable dark mode.",
       category: "Appearance",
@@ -73,7 +79,7 @@ const HelpPage: React.FC = () => {
     },
     {
       question: "How do I sync with Google Calendar?",
-      answer: "To sync with Google Calendar, go to Settings > Calendar and toggle on 'Google Calendar'. You'll be prompted to authorize the connection.",
+      answer: "To sync with Google Calendar, go to Settings > Calendar and toggle on 'Google Calendar'. You'll be prompted to authorize the connection. After authorization, your birthdays will appear in your Google Calendar.",
       category: "Calendar",
       icon: <Calendar className="h-5 w-5" />
     },
@@ -82,6 +88,12 @@ const HelpPage: React.FC = () => {
       answer: "To change your profile picture, go to your profile page and tap on your current picture or the camera icon. You can then select a new image from your device.",
       category: "Profile",
       icon: <User className="h-5 w-5" />
+    },
+    {
+      question: "How do I use the AI Chat for birthdays?",
+      answer: "To use the AI Chat feature, go to a birthday detail page and tap on 'Chat with AI'. You can ask for gift ideas, message suggestions, or planning advice specific to that person.",
+      category: "AI Features",
+      icon: <MessageCircle className="h-5 w-5" />
     },
     {
       question: "What happens if I lose internet connection?",
@@ -97,7 +109,7 @@ const HelpPage: React.FC = () => {
     },
     {
       question: "How do I delete my account?",
-      answer: "To delete your account, go to Settings > Account > Privacy Settings, and select 'Delete Account'. This action cannot be undone.",
+      answer: "To delete your account, go to Settings > Account > Privacy Settings, and select 'Delete Account'. This action cannot be undone and will remove all your data.",
       category: "Account",
       icon: <User className="h-5 w-5" />
     }

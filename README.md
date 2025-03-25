@@ -9,20 +9,26 @@ WishOne is a modern birthday reminder and companion application that helps you r
 - **Reminders**: Set customized reminders so you never forget an important date
 - **Google Calendar Integration**: Sync birthdays with your Google Calendar
 - **Profile Management**: Create and manage multiple profiles
+- **Help Center**: Access a comprehensive help center with searchable FAQ categories
+- **Contact Support**: Submit inquiries, bug reports, or feature suggestions through the integrated support form
+- **Responsive Design**: Beautiful user interface that works across all device sizes
+- **Offline Support**: Access your data even without an internet connection
 
 ## Tech Stack
 
 - **Frontend**: React, TypeScript, Vite
-- **UI Components**: Tailwind CSS, shadcn/ui
+- **UI Components**: Tailwind CSS, shadcn/ui, Framer Motion
 - **Database**: Supabase
 - **AI Integration**: Google Gemini AI
 - **Authentication**: Supabase Auth
+- **Email Service**: Nodemailer with Gmail SMTP
+- **Animations**: Framer Motion, GSAP
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (v16 or higher)
+- Node.js (v18 or higher)
 - npm or yarn
 - Supabase account
 - Google Gemini API key
@@ -56,25 +62,34 @@ WishOne is a modern birthday reminder and companion application that helps you r
    yarn dev
    ```
 
-5. Open your browser and navigate to `http://localhost:5173`
+5. Start the email server for contact form functionality:
+   ```bash
+   npm run server
+   ```
+
+6. Open your browser and navigate to `http://localhost:5173`
 
 ## Project Structure
 
 - `/src`: Source code
   - `/components`: React components
     - `/ui`: UI components (buttons, inputs, etc.)
+  - `/pages`: Page components
+  - `/hooks`: Custom React hooks
+  - `/contexts`: React context providers
+  - `/services`: API services
+  - `/utils`: Utility functions
   - `/lib`: Utility functions and services
   - `/types`: TypeScript type definitions
+  - `/server`: Back-end server code for email services
 
-## Offline Use
+## Deployment
 
-To download the project for offline use, run the included PowerShell script:
+For deployment instructions, see [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md) for detailed steps on deploying to Vercel.
 
-```bash
-powershell -ExecutionPolicy Bypass -File download-project.ps1
-```
+## Database Setup
 
-This will create a zip file containing the entire project (excluding node_modules and other large directories).
+For database setup instructions, see [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) for detailed steps on setting up Supabase.
 
 ## License
 
@@ -86,6 +101,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [Tailwind CSS](https://tailwindcss.com/) for the styling system
 - [Supabase](https://supabase.io/) for the backend services
 - [Google Gemini AI](https://ai.google.dev/) for the AI capabilities
+- [Framer Motion](https://www.framer.com/motion/) for animations
 
 # React + TypeScript + Vite
 

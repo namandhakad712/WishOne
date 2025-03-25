@@ -7,11 +7,13 @@ This guide will help you deploy your WishOne application to Vercel and configure
 - A Vercel account
 - Access to your Supabase project
 - Google OAuth credentials (if using Google authentication)
+- Google Gemini API key
 
 ## Deployment Steps
 
 1. **Push your code to GitHub**
    - Make sure all your changes are committed and pushed to GitHub
+   - Ensure all environment variables are properly set up in your .env.local file for testing before deployment
 
 2. **Connect to Vercel**
    - Go to [Vercel](https://vercel.com) and log in
@@ -32,12 +34,23 @@ This guide will help you deploy your WishOne application to Vercel and configure
      VITE_GEMINI_API_KEY=AIzaSyC81EywHHPaslM_nTBEyBO-FWaXLc-tXvc
      ```
 
+4. **Configure Vercel for Email Server (Optional)**
+   - If you want to use the contact form functionality, you'll need to set up a separate server deployment
+   - Create a new project for your server or use Vercel Serverless Functions
+   - Add these additional environment variables for the email service:
+     ```
+     EMAIL_USER=your_email@gmail.com
+     EMAIL_PASS=your_app_password
+     EMAIL_TO=destination_email@gmail.com
+     EMAIL_SERVICE=gmail
+     ```
+
 ## Supabase Configuration
 
 1. **Update URL Configuration in Supabase**
    - Go to your Supabase project dashboard
    - Navigate to Authentication > URL Configuration
-   - Set the Site URL to `https://wish-one-web.vercel.app`
+   - Set the Site URL to `https://wish-one-web.vercel.app` (or your custom domain)
    - Add the following redirect URLs:
      ```
      https://wish-one-web.vercel.app/auth/callback
@@ -72,6 +85,17 @@ This guide will help you deploy your WishOne application to Vercel and configure
    - Try to connect to Google Calendar
    - Verify the OAuth flow works and redirects back to your application
 
+4. Test the Contact Form functionality:
+   - Go to the Help page and submit a test contact form
+   - Verify that emails are being received correctly
+
+## Custom Domain Setup (Optional)
+
+1. In your Vercel project settings, go to "Domains"
+2. Add your custom domain and follow Vercel's instructions for DNS configuration
+3. Update your Supabase URL configurations with the new domain
+4. Update your Google OAuth redirect URIs with the new domain
+
 ## Troubleshooting
 
 - **Authentication Redirect Issues**:
@@ -82,9 +106,15 @@ This guide will help you deploy your WishOne application to Vercel and configure
 - **Environment Variable Problems**:
   - Verify that all environment variables are correctly set in Vercel
   - Redeploy your application after changing environment variables
+  - Make sure there are no typos in your environment variable names
 
 - **CORS Issues**:
   - If you encounter CORS errors, check the allowed origins in your Supabase project settings
+
+- **Email Server Issues**:
+  - If the contact form isn't working, check your server logs
+  - Verify that the email credentials are correct
+  - Test the server locally before deploying
 
 ## Production Considerations
 
@@ -92,9 +122,11 @@ This guide will help you deploy your WishOne application to Vercel and configure
 - Set up proper backup strategies for your Supabase database
 - Consider setting up CI/CD pipelines for automated deployments
 - Monitor application performance and errors using Vercel Analytics
+- Set up logging and monitoring for your email server
 
 ## Resources
 
 - [Vercel Documentation](https://vercel.com/docs)
 - [Supabase Authentication Documentation](https://supabase.com/docs/guides/auth)
-- [Google OAuth Documentation](https://developers.google.com/identity/protocols/oauth2) 
+- [Google OAuth Documentation](https://developers.google.com/identity/protocols/oauth2)
+- [Nodemailer Documentation](https://nodemailer.com/about/) 
