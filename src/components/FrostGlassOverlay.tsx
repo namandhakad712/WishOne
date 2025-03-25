@@ -2,30 +2,27 @@ import React from 'react';
 
 interface FrostGlassOverlayProps {
   className?: string;
+  imageUrl?: string;
+  children?: React.ReactNode;
 }
 
 /**
  * A component that creates a frosted glass effect overlay
  * This will be conditionally rendered on the home screen when enabled in settings
  */
-const FrostGlassOverlay: React.FC<FrostGlassOverlayProps> = ({ className = '' }) => {
+const FrostGlassOverlay: React.FC<FrostGlassOverlayProps> = ({ className = '', imageUrl, children }) => {
+  const backgroundImage = imageUrl || 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/1376484/jess-harding-lqT6NAmTaiY-unsplash.jpg';
   return (
-    <div 
-      className={`absolute inset-0 z-5 pointer-events-none ${className}`}
-      style={{
-        backdropFilter: 'blur(10px)',
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-        mixBlendMode: 'overlay'
-      }}
-    >
-      {/* Optional subtle pattern overlay to enhance frost effect */}
-      <div 
-        className="absolute inset-0"
-        style={{
-          backgroundImage: 'radial-gradient(circle at center, rgba(255,255,255,0.15) 0%, transparent 8%)',
-          backgroundSize: '25px 25px'
-        }}
+    <div className={`frost-glass ${className}`}>
+      <div
+        className="frost-glass__background"
+        style={{ backgroundImage: `url(${backgroundImage})` }}
       />
+      <div className="frost-glass__shadow">
+        {children && (
+          <span className="frost-glass__content">{children}</span>
+        )}
+      </div>
     </div>
   );
 };

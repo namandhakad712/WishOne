@@ -10,6 +10,7 @@ import { addBirthday, getBirthdays, deleteBirthday, updateBirthday } from "@/lib
 import { useSupabase } from "@/contexts/SupabaseContext";
 import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 interface Birthday {
   id: string;
@@ -30,6 +31,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const { user, isAuthenticated } = useSupabase();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Load birthdays from Supabase when component mounts or user changes
   useEffect(() => {
@@ -301,9 +303,10 @@ const Home = () => {
 
       <BottomTabBar
         activeTab="home"
-        onHomeClick={() => {}}
-        onChatClick={() => (window.location.href = "/chat")}
-        onProfileClick={() => (window.location.href = "/profile")}
+        onHomeClick={() => navigate("/")}
+        onChatClick={() => navigate("/chat")}
+        onGoalsClick={() => navigate("/goals")}
+        onProfileClick={() => navigate("/profile")}
       />
     </div>
   );

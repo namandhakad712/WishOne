@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSupabase } from '@/contexts/SupabaseContext';
 import { AdaptiveText } from './ui/adaptive-text';
+import InteractiveScrambledText from './ui/interactive-scrambled-text';
 
 const AIGreeting: React.FC = () => {
   const [greeting, setGreeting] = useState('');
@@ -170,9 +171,11 @@ const AIGreeting: React.FC = () => {
 
   return (
     <div className="text-center">
+      <InteractiveScrambledText radius={120} duration={1.5} speed={0.4} scrambleChars={'.:'}>
       <AdaptiveText as="h1" className="text-4xl font-bold">
         {greeting}
       </AdaptiveText>
+      </InteractiveScrambledText>
       <AdaptiveText as="p" className="text-xl mt-2">
         {secondaryMessage}
       </AdaptiveText>

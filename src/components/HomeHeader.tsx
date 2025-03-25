@@ -9,27 +9,23 @@ const HomeHeader: React.FC = () => {
   return (
     <div className="flex justify-between items-center w-full px-4 py-6">
       <motion.button
-        className="rounded-full p-3 bg-[#f0f4f1] text-[#5a7d7c] shadow-[5px_5px_10px_rgba(0,0,0,0.05),-5px_-5px_10px_rgba(255,255,255,0.8)]"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ 
-          scale: 0.95,
-          boxShadow: "inset 2px 2px 5px rgba(0,0,0,0.05), inset -2px -2px 5px rgba(255,255,255,0.8)"
-        }}
+        className="relative rounded-full p-3 bg-white/30 backdrop-blur-md border border-white/40 shadow-lg overflow-hidden flex items-center justify-center transition-all duration-200 before:content-[''] before:absolute before:inset-0 before:rounded-full before:bg-gradient-to-br before:from-white/60 before:to-white/10 before:opacity-60 before:pointer-events-none after:content-[''] after:absolute after:inset-0 after:rounded-full after:shadow-[0_4px_24px_0_rgba(0,255,255,0.10)] hover:scale-105 active:scale-95"
+        whileHover={{ scale: 1.07 }}
+        whileTap={{ scale: 0.95 }}
         onClick={() => navigate('/help')}
+        style={{ boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.18), 0 1.5px 8px 0 rgba(0,255,255,0.10)'}}
       >
-        <HelpCircle className="w-6 h-6" />
+        <HelpCircle className="w-6 h-6 text-[#5a7d7c] drop-shadow-[0_2px_8px_rgba(0,255,255,0.10)]" />
       </motion.button>
 
       <motion.button
-        className="rounded-full p-3 bg-[#f0f4f1] text-[#5a7d7c] shadow-[5px_5px_10px_rgba(0,0,0,0.05),-5px_-5px_10px_rgba(255,255,255,0.8)]"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ 
-          scale: 0.95,
-          boxShadow: "inset 2px 2px 5px rgba(0,0,0,0.05), inset -2px -2px 5px rgba(255,255,255,0.8)"
-        }}
+        className="relative rounded-full p-3 bg-white/30 backdrop-blur-md border border-white/40 shadow-lg overflow-hidden flex items-center justify-center transition-all duration-200 before:content-[''] before:absolute before:inset-0 before:rounded-full before:bg-gradient-to-br before:from-white/60 before:to-white/10 before:opacity-60 before:pointer-events-none after:content-[''] after:absolute after:inset-0 after:rounded-full after:shadow-[0_4px_24px_0_rgba(0,255,255,0.10)] hover:scale-105 active:scale-95"
+        whileHover={{ scale: 1.07 }}
+        whileTap={{ scale: 0.95 }}
         onClick={() => navigate('/profile')}
+        style={{ boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.18), 0 1.5px 8px 0 rgba(0,255,255,0.10)'}}
       >
-        <User className="w-6 h-6" />
+        <User className="w-6 h-6 text-[#5a7d7c] drop-shadow-[0_2px_8px_rgba(0,255,255,0.10)]" />
       </motion.button>
     </div>
   );

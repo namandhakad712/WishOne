@@ -15,9 +15,9 @@ export async function generateResponse(prompt: string) {
       return "I can't connect to my brain right now. Please check if my API key is configured correctly.";
     }
 
-    // For text-only input, use the gemini-1.5-flash model
+    // For text-only input, use the gemini-2.0-flash model
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
+      model: "gemini-2.0-flash",
       generationConfig: {
         maxOutputTokens: 150, // Slightly longer responses for more emotional depth
         temperature: 0.9,     // Higher temperature for more creative and human-like responses
@@ -64,7 +64,7 @@ export async function generateBirthdayWish(name: string, relation: string, tone:
     }
 
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
+      model: "gemini-2.0-flash",
       generationConfig: {
         maxOutputTokens: 200,
         temperature: 0.95, // Very high temperature for creative, heartfelt wishes
@@ -107,9 +107,9 @@ export async function analyzeImage(imageData: string, prompt: string) {
       return "I'd love to see what you're sharing, but I can't access my vision capabilities right now. Please check if my API key is configured correctly.";
     }
 
-    // For multimodal input (text + image), use the gemini-1.5-flash model
+    // For multimodal input (text + image), use the gemini-2.0-flash model
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
+      model: "gemini-2.0-flash",
       generationConfig: {
         maxOutputTokens: 150,
         temperature: 0.85, // Higher temperature for more emotional image analysis

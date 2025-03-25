@@ -26,10 +26,24 @@ CREATE TABLE IF NOT EXISTS public.birthdays (
   notes TEXT
 );
 
+-- Create goals table
+CREATE TABLE IF NOT EXISTS public.goals (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  priority TEXT NOT NULL DEFAULT 'medium',
+  due_date TIMESTAMP WITH TIME ZONE,
+  completed BOOLEAN NOT NULL DEFAULT FALSE
+);
+
 -- Create indexes for better query performance
 CREATE INDEX IF NOT EXISTS birthdays_user_id_idx ON public.birthdays(user_id);
 CREATE INDEX IF NOT EXISTS birthdays_date_idx ON public.birthdays(date);
 CREATE INDEX IF NOT EXISTS users_email_idx ON public.users(email);
+CREATE INDEX IF NOT EXISTS goals_user_id_idx ON public.goals(user_id);
+CREATE INDEX IF NOT EXISTS goals_due_date_idx ON public.goals(due_date);
 
 -- Create function to update the updated_at column
 CREATE OR REPLACE FUNCTION update_updated_at()
@@ -53,9 +67,16 @@ BEFORE UPDATE ON public.birthdays
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at();
 
+DROP TRIGGER IF EXISTS goals_updated_at ON public.goals;
+CREATE TRIGGER goals_updated_at
+BEFORE UPDATE ON public.goals
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at();
+
 -- Enable Row Level Security
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.birthdays ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.goals ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for users table
 DROP POLICY IF EXISTS users_select_own ON public.users;
@@ -91,6 +112,23 @@ FOR UPDATE USING (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS birthdays_delete_own ON public.birthdays;
 CREATE POLICY birthdays_delete_own ON public.birthdays
+FOR DELETE USING (auth.uid() = user_id);
+
+-- Create policies for goals table
+DROP POLICY IF EXISTS goals_select_own ON public.goals;
+CREATE POLICY goals_select_own ON public.goals
+FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS goals_insert_own ON public.goals;
+CREATE POLICY goals_insert_own ON public.goals
+FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS goals_update_own ON public.goals;
+CREATE POLICY goals_update_own ON public.goals
+FOR UPDATE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS goals_delete_own ON public.goals;
+CREATE POLICY goals_delete_own ON public.goals
 FOR DELETE USING (auth.uid() = user_id);
 
 -- Create a function to ensure a user exists in the public table

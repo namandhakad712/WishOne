@@ -1137,4 +1137,51 @@ export const checkSupabaseHealth = async () => {
       };
     }
   }, 2); // Only retry once for health checks
-}; 
+};
+
+// GOALS CRUD
+export async function getGoals(userId: string) {
+  const { data, error } = await supabase
+    .from('goals')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function addGoal(goal: {
+  user_id: string;
+  title: string;
+  description?: string;
+  priority?: string;
+  due_date?: string;
+}) {
+  const { data, error } = await supabase
+    .from('goals')
+    .insert([goal])
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateGoal(id: string, updates: any) {
+  const { data, error } = await supabase
+    .from('goals')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteGoal(id: string) {
+  const { error } = await supabase
+    .from('goals')
+    .delete()
+    .eq('id', id);
+  if (error) throw error;
+  return true;
+} 

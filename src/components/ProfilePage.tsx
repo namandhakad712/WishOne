@@ -253,9 +253,10 @@ const ProfilePage = () => {
 
         <BottomTabBar
           activeTab="profile"
-          onHomeClick={() => (window.location.href = "/")}
-          onChatClick={() => (window.location.href = "/chat")}
-          onProfileClick={() => {}}
+          onHomeClick={() => navigate("/")}
+          onChatClick={() => navigate("/chat")}
+          onGoalsClick={() => navigate("/goals")}
+          onProfileClick={() => navigate("/profile")}
         />
       </div>
     </div>

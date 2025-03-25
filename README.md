@@ -1,28 +1,61 @@
 # WishOne ✨
 
-WishOne is a modern birthday reminder and companion application that helps you remember and celebrate special occasions with the people you care about. With an AI-powered chat companion, beautiful calendar interface, and personalized birthday wishes, WishOne makes sure you never miss an important date again.
+WishOne is a modern birthday and goals companion app that helps you remember, celebrate, and achieve. With an AI-powered chat companion, beautiful animated backgrounds, and personalized features, WishOne makes sure you never miss an important date or milestone.
+
+---
+
+## 🚀 Latest Features
+
+- **Animated Aurora & Neumorphic UI:** Modern, animated backgrounds and neumorphic glass elements for a beautiful, tactile experience.
+- **Goals Management:** Add, edit, sort, and filter personal goals with priority and due dates. Includes a motivational popup with animated text when you add a new goal.
+- **Custom Date/Time Picker:** Pick date and time for goals, with a "Current" button to instantly select the current system date/time.
+- **Profile & Settings Panel:** Responsive, animated settings panel with theme, retro mode, and background gradient customization. Save button features a neon-glow effect.
+- **Gradient Palettes:** Choose from multiple beautiful background gradients, including a vibrant "Random" palette.
+- **AI Chatbot (Gemini 2.0):** All AI features use the latest Gemini 2.0 model for chat, wishes, and image analysis.
+- **Offline Support:** Use the app and access your data even without an internet connection.
+- **Help Center & Contact:** Comprehensive help center with FAQ, and a contact form for support, bug reports, and feature suggestions (emails sent via Gmail SMTP).
+- **Google Calendar Integration:** Sync birthdays with your Google Calendar.
+- **Ultra-Responsive Design:** All pages and dialogs are fully responsive and mobile-friendly.
+- **Accessibility:** Keyboard navigation and focus management for all dialogs and forms.
+
+---
 
 ## Features
 
-- **Birthday Calendar**: Track and manage birthdays with a beautiful, intuitive calendar interface
-- **AI Companion**: Chat with an emotionally intelligent AI that helps you craft personalized birthday wishes
-- **Reminders**: Set customized reminders so you never forget an important date
-- **Google Calendar Integration**: Sync birthdays with your Google Calendar
-- **Profile Management**: Create and manage multiple profiles
-- **Help Center**: Access a comprehensive help center with searchable FAQ categories
-- **Contact Support**: Submit inquiries, bug reports, or feature suggestions through the integrated support form
-- **Responsive Design**: Beautiful user interface that works across all device sizes
-- **Offline Support**: Access your data even without an internet connection
+- **Birthday Calendar:** Track and manage birthdays with a beautiful, intuitive calendar interface
+- **Goals & Reminders:** Set, sort, and filter goals with priorities and due dates
+- **AI Companion:** Chat with an emotionally intelligent AI that helps you craft personalized birthday wishes and goal encouragement
+- **Profile Management:** Create and manage multiple profiles
+- **Settings Customization:** Change theme, enable retro mode, pick background gradients, and toggle glass effects
+- **Help Center:** Access a comprehensive help center with searchable FAQ categories
+- **Contact Support:** Submit inquiries, bug reports, or feature suggestions through the integrated support form
+- **Responsive Design:** Beautiful user interface that works across all device sizes
+- **Offline Support:** Access your data even without an internet connection
+
+---
 
 ## Tech Stack
 
-- **Frontend**: React, TypeScript, Vite
-- **UI Components**: Tailwind CSS, shadcn/ui, Framer Motion
-- **Database**: Supabase
-- **AI Integration**: Google Gemini AI
-- **Authentication**: Supabase Auth
-- **Email Service**: Nodemailer with Gmail SMTP
-- **Animations**: Framer Motion, GSAP
+- **Frontend:** React, TypeScript, Vite
+- **UI Components:** Tailwind CSS, shadcn/ui, GSAP, Framer Motion
+- **Database:** Supabase
+- **AI Integration:** Google Gemini 2.0
+- **Authentication:** Supabase Auth
+- **Email Service:** Nodemailer with Gmail SMTP
+- **Animations:** GSAP, Framer Motion
+
+---
+
+## Project Structure
+
+- `/src/components/ui`: All reusable UI components (buttons, dialogs, pickers, etc.)
+- `/src/pages`: Main app pages (Goals, Profile, Help, etc.)
+- `/src/contexts`: React context providers (Theme, Supabase, RetroMode, etc.)
+- `/src/lib`: Utility functions, Supabase, and AI integration
+- `/src/server`: Email/contact backend
+- `/supabase/migrations`: Database schema and migration files
+
+---
 
 ## Getting Started
 
@@ -69,19 +102,7 @@ WishOne is a modern birthday reminder and companion application that helps you r
 
 6. Open your browser and navigate to `http://localhost:5173`
 
-## Project Structure
-
-- `/src`: Source code
-  - `/components`: React components
-    - `/ui`: UI components (buttons, inputs, etc.)
-  - `/pages`: Page components
-  - `/hooks`: Custom React hooks
-  - `/contexts`: React context providers
-  - `/services`: API services
-  - `/utils`: Utility functions
-  - `/lib`: Utility functions and services
-  - `/types`: TypeScript type definitions
-  - `/server`: Back-end server code for email services
+---
 
 ## Deployment
 
@@ -90,6 +111,17 @@ For deployment instructions, see [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md) 
 ## Database Setup
 
 For database setup instructions, see [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) for detailed steps on setting up Supabase.
+
+---
+
+## Docs & Customization
+
+- **Settings Panel:** Change theme, enable retro mode, pick background gradients, and toggle glass effects.
+- **Goals Page:** Add new goals with animated feedback, sort/filter, and mark as complete.
+- **Date/Time Picker:** Use the "Current" button for instant now, or pick manually.
+- **Help Center:** Search FAQs or contact support directly from the app.
+
+---
 
 ## License
 

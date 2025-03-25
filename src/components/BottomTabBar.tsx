@@ -1,11 +1,12 @@
 import React from "react";
-import { Home, MessageSquare, User } from "lucide-react";
+import { Home, MessageSquare, User, CheckCircle } from "lucide-react";
 
 interface BottomTabBarProps {
-  activeTab?: "home" | "chat" | "profile";
+  activeTab?: "home" | "chat" | "profile" | "goals";
   onHomeClick?: () => void;
   onChatClick?: () => void;
   onProfileClick?: () => void;
+  onGoalsClick?: () => void;
 }
 
 const BottomTabBar = ({
@@ -13,6 +14,7 @@ const BottomTabBar = ({
   onHomeClick = () => {},
   onChatClick = () => {},
   onProfileClick = () => {},
+  onGoalsClick = () => {},
 }: BottomTabBarProps) => {
   // Function to reset the welcome window (for testing)
   const resetWelcomeWindow = () => {
@@ -35,6 +37,13 @@ const BottomTabBar = ({
           className={`p-2 ${activeTab === "chat" ? "text-[#0f3c2d]" : "text-gray-400"} hover:text-[#0f3c2d] transition-colors`}
         >
           <MessageSquare className="w-6 h-6" />
+        </button>
+
+        <button
+          onClick={onGoalsClick}
+          className={`p-2 ${activeTab === "goals" ? "text-[#0f3c2d]" : "text-gray-400"} hover:text-[#0f3c2d] transition-colors`}
+        >
+          <CheckCircle className="w-6 h-6" />
         </button>
 
         <button

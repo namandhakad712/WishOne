@@ -4,6 +4,7 @@ import BottomTabBar from "./BottomTabBar";
 import ApiKeyMissing from "./ApiKeyMissing";
 import { generateResponse, analyzeImage, generateBirthdayWish } from "@/lib/gemini";
 import { gsap } from "gsap";
+import { useNavigate } from "react-router-dom";
 
 // Check if API key is available
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
@@ -48,6 +49,8 @@ const ChatPage = () => {
   const pageRef = useRef<HTMLDivElement>(null);
   const chatbotContainerRef = useRef<HTMLDivElement>(null);
   const bgElementsRef = useRef<HTMLDivElement>(null);
+  
+  const navigate = useNavigate();
   
   // Check for birthdays on component mount
   useEffect(() => {
@@ -611,9 +614,10 @@ const ChatPage = () => {
 
         <BottomTabBar
           activeTab="chat"
-          onHomeClick={() => (window.location.href = "/")}
-          onChatClick={() => {}}
-          onProfileClick={() => (window.location.href = "/profile")}
+          onHomeClick={() => navigate("/")}
+          onChatClick={() => navigate("/chat")}
+          onGoalsClick={() => navigate("/goals")}
+          onProfileClick={() => navigate("/profile")}
         />
       </div>
     </div>

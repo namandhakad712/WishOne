@@ -88,7 +88,13 @@ export const gradientOptions: GradientOption[] = [
     id: "random",
     name: "Random",
     colors: ["128, 128, 128", "128, 128, 128"], // Placeholder, will be generated dynamically
-    preview: "linear-gradient(135deg, rgb(128, 128, 128) 0%, rgb(128, 128, 128) 100%)"
+    preview: "linear-gradient(90deg, #ff9a9e 0%, #fad0c4 25%, #a18cd1 50%, #fbc2eb 75%, #f6d365 100%)"
+  },
+  {
+    id: "malibu-beach",
+    name: "Warm Flame",
+    colors: ["255, 154, 158", "250, 208, 196"],
+    preview: "linear-gradient(135deg, rgb(255, 154, 158) 0%, rgb(250, 208, 196) 100%)"
   }
 ];
 
@@ -425,7 +431,7 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
         ref={dialogRef}
-        className="max-w-3xl max-h-[90vh] overflow-y-auto"
+        className="w-full max-w-lg sm:max-w-2xl sm:w-[min(100vw-2rem,700px)] max-h-[90vh] overflow-y-auto px-2 sm:px-6 py-4 sm:py-8 rounded-xl sm:rounded-2xl"
       >
         <div ref={headerRef}>
           <DialogHeader>
@@ -439,7 +445,7 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
         <div className="mt-6 space-y-6">
           <div ref={tabsListRef}>
             <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid grid-cols-4 mb-6">
+              <TabsList className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6 w-full">
                 <AnimatedElement type="fadeIn" delay={0.2} duration={0.4}>
                   <TabsTrigger value="appearance" className="flex items-center gap-2">
                     <Palette className="h-4 w-4" />
@@ -548,7 +554,7 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                       Choose a color theme for your backgrounds.
                     </p>
                       
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                       {gradientOptions.map((gradient) => (
                             <div 
                               key={gradient.id}
@@ -675,7 +681,7 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                       onChange={(e) =>
                         updateSetting("calendar", "defaultReminder", e.target.value)
                       }
-                      className="w-full p-2 rounded-md border bg-white/90"
+                      className="w-full p-2 rounded-md border bg-white/90 text-sm"
                       >
                       <option value="same-day">Same day</option>
                       <option value="1-day">1 day before</option>
@@ -699,7 +705,7 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                       onChange={(e) =>
                         updateSetting("calendar", "weekStart", e.target.value)
                       }
-                      className="w-full p-2 rounded-md border bg-white/90"
+                      className="w-full p-2 rounded-md border bg-white/90 text-sm"
                       >
                       <option value="monday">Monday</option>
                         <option value="sunday">Sunday</option>
@@ -718,7 +724,7 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
                     <p className="text-sm text-gray-500">
                       Manage your account settings and preferences.
                     </p>
-                    <div className="p-4 bg-gray-50 rounded-lg">
+                    <div className="p-4 bg-gray-50 rounded-lg overflow-x-auto">
                       <p className="text-sm mb-2">
                         <strong>Email:</strong> {user?.email}
                       </p>
@@ -763,7 +769,7 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
           </div>
         </div>
 
-        <DialogFooter ref={footerRef}>
+        <DialogFooter ref={footerRef} className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-stretch sm:items-center mt-6">
           <AnimatedElement type="fadeIn" delay={0.6} duration={0.4}>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
@@ -771,20 +777,22 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
           </AnimatedElement>
           
           <AnimatedElement type="fadeIn" delay={0.7} duration={0.4}>
-              <ButtonKwity
+            <button
+              type="button"
                 onClick={saveSettings}
               disabled={isSaving}
-              className="save-button"
+              className="group relative bg-neutral-800 h-12 w-48 border text-left px-4 py-2 text-gray-50 text-base font-bold rounded-lg overflow-hidden underline underline-offset-2 duration-500 before:absolute before:w-8 before:h-8 before:content-[''] before:right-1 before:top-1 before:z-10 before:bg-violet-500 before:rounded-full before:blur-lg after:absolute after:z-10 after:w-14 after:h-14 after:content-[''] after:bg-rose-400 after:bg-opacity-80 after:right-6 after:top-2 after:rounded-full after:blur-lg group-hover:before:duration-500 group-hover:after:duration-500 after:duration-500 hover:border-rose-300 hover:before:[box-shadow:_12px_12px_12px_18px_#a21caf] hover:duration-500 hover:after:-right-6 hover:before:right-8 hover:before:-bottom-4 hover:before:blur hover:underline hover:underline-offset-4 origin-left hover:decoration-2 hover:text-white"
+              style={{ minWidth: '8rem', minHeight: '2.5rem', maxWidth: '100%', width: '12rem', height: '3rem', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'color 0.3s', }}
               >
               {isSaving ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin inline-block align-middle" />
+                  <span className="align-middle">Saving...</span>
                   </>
                 ) : (
-                  "Save Changes"
+                <span className="transition-all group-hover:text-white group-hover:[text-shadow:0_0_8px_#fff,0_0_16px_#a21caf,0_0_24px_#a21caf]">Save Changes</span>
                 )}
-              </ButtonKwity>
+            </button>
           </AnimatedElement>
             </DialogFooter>
       </DialogContent>
