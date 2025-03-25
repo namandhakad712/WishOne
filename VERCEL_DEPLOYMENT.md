@@ -29,9 +29,9 @@ This guide will help you deploy your WishOne application to Vercel and configure
    - Go to the "Environment Variables" tab
    - Add the following environment variables:
      ```
-     VITE_SUPABASE_URL=https://wmlifncvyvddgzxrdwlx.supabase.co
-     VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndtbGlmbmN2eXZkZGd6eHJkd2x4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE1NDUyMTcsImV4cCI6MjA1NzEyMTIxN30.i1_CcAaoGx3f1GTh-noRmXETFd6f6kamkUWf8iQ8d1k
-     VITE_GEMINI_API_KEY=AIzaSyC81EywHHPaslM_nTBEyBO-FWaXLc-tXvc
+     VITE_SUPABASE_URL=https://your-supabase-project-url.supabase.co
+     VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+     VITE_GEMINI_API_KEY=your-gemini-api-key
      ```
 
 4. **Configure Vercel for Email Server (Optional)**
